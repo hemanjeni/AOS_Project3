@@ -1,6 +1,6 @@
 import java.io.Serializable;
 
-public class Message  implements Serializable, Comparable<Message>{
+public class Message  implements Serializable{
 
     private static final long serialVersionUID = 1L;
     private int senderID;
@@ -23,14 +23,38 @@ public class Message  implements Serializable, Comparable<Message>{
         this.fileName = FileName;
         this.index = index;
     }
+
     public Message(int senderUID, MessageType Msgtype, String FileName) {
         this.senderID = senderUID;
         this.msgtype = Msgtype;
         this.fileName = FileName;
 
+
+        public static long getSerialVersionUID() {
+        return serialVersionUID;
     }
-    @Override
-    public int compareTo(Message o) {
-        return 0;
+
+    public int getSenderID() {
+        return senderID;
     }
+
+    public int getOffset() {
+        return offset;
+    }
+
+    public int getIndex() {
+        return index;
+    }
+
+    public String getFileName() {
+        return fileName;
+    }
+
+    public MessageType getMsgtype() {
+        return msgtype;
+    }
+
+
+    }
+
 }

@@ -40,7 +40,10 @@ public class MetadataServer {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		}
+
+		
+
+	}
 
 	/* server number to be given as argument while running */
 	public static void main(String[] args) {
@@ -50,6 +53,8 @@ public class MetadataServer {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+
 	}
+
 
 }

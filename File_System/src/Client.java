@@ -12,10 +12,9 @@ import java.util.logging.SimpleFormatter;
 public class Client {
 
 	static Map<String, Integer> hmap = new HashMap<>();
-	static DataOutputStream dos[] = new DataOutputStream[7];
-	static DataInputStream dis[] = new DataInputStream[7];
-	static ServerSocket ss[] = new ServerSocket[7];
-	static Socket s[] = new Socket[7];
+	static DataOutputStream dos[] = new DataOutputStream[6];
+	static DataInputStream dis[] = new DataInputStream[6];
+	static Socket s[] = new Socket[6];
 	int client_no;
 	static Thread[] t;
 	
@@ -143,7 +142,7 @@ public class Client {
 						{
 							serveraddress= 	server5Address;
 						}
-					s[i] = new Socket(serveraddress,10001);
+					s[i] = new Socket(serveraddress,10002);
 					
 					dos[i] = new DataOutputStream(s[i].getOutputStream());
 					dis[i] = new DataInputStream(s[i].getInputStream());

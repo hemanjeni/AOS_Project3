@@ -338,7 +338,7 @@ public class Server {
 					t[4] = new Thread(new ChannelHandler(s[4]));
 					//start thread for each server
 					t[4].start();
-					//accept client connections
+					
 					ss[5] = new ServerSocket(server5portforclient1);
 					s[5] = ss[5].accept();
 					dos[5] = new DataOutputStream(s[5].getOutputStream());

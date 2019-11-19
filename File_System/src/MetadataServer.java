@@ -21,7 +21,6 @@ public class MetadataServer {
 
 	public MetadataServer(String args[]) throws IOException {
 
-		
 		ConfigProperties prop = new ConfigProperties();
 		int metadataServeraddressforserver1 =  Integer.parseInt(prop.getPropValues("metadataServeraddressforserver1"));
 		

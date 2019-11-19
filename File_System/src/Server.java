@@ -87,7 +87,25 @@ public class Server {
 					// connecting to other servers
 					for (int i = 1; i < 5; i++) 
 					{
-					ss[i] = new ServerSocket((5001-1) + i);
+						int serverport =0;
+						if(i==1)
+						{
+							serverport=server1portforserver2;
+						}
+						if(i==2)
+						{
+							serverport=server1portforserver3;
+						}
+						if(i==3)
+						{
+							serverport=server1portforserver4;
+						}
+						if(i==4)
+						{
+							serverport=server1portforserver5;
+						}
+						
+					ss[i] = new ServerSocket(serverport);
 					s[i] = ss[i].accept();
 					dos[i] = new DataOutputStream(s[i].getOutputStream());
 					dis[i] = new DataInputStream(s[i].getInputStream());
@@ -123,6 +141,7 @@ public class Server {
 				//server no=2
 				if ((server_no) == 2) {
 					//connect to metadata server
+					
 					s[0] = new Socket(metadataServeraddress, metadataServeraddressforserver2);
 					dos[0] = new DataOutputStream(s[0].getOutputStream());
 					dis[0] = new DataInputStream(s[0].getInputStream());
@@ -137,17 +156,25 @@ public class Server {
 					//start thread for each server
 					t[1].start();
 					//connect to server1 first before accepting connections from other clients
-						
-					s[2] = new Socket(server1Address, server1portforserver2);
-					dos[2] = new DataOutputStream(s[2].getOutputStream());
-					dis[2] = new DataInputStream(s[2].getInputStream());
-					t[2] = new Thread(new ChannelHandler(s[2]));
-					//start thread for each server
-					t[2].start();
 					
-					for (int i = 3; i < 5; i++) 
+					
+					for (int i = 2; i < 5; i++) 
 					{
-					ss[i] = new ServerSocket((6001-2) + i);
+						int serverport =0;
+						
+						if(i==2)
+						{
+							serverport=server2portforserver3;
+						}
+						if(i==3)
+						{
+							serverport=server2portforserver4;
+						}
+						if(i==4)
+						{
+							serverport=server2portforserver5;
+						}
+					ss[i] = new ServerSocket(serverport);
 					s[i] = ss[i].accept();
 					dos[i] = new DataOutputStream(s[i].getOutputStream());
 					dis[i] = new DataInputStream(s[i].getInputStream());
@@ -209,7 +236,18 @@ public class Server {
 					
 					for (int i = 3; i < 5; i++) 
 					{
-					ss[i] = new ServerSocket((7001-3) + i);
+                        int serverport =0;
+						
+						
+						if(i==3)
+						{
+							serverport=server3portforserver4;
+						}
+						if(i==4)
+						{
+							serverport=server3portforserver5;
+						}
+					ss[i] = new ServerSocket(serverport);
 					s[i] = ss[i].accept();
 					dos[i] = new DataOutputStream(s[i].getOutputStream());
 					dis[i] = new DataInputStream(s[i].getInputStream());
@@ -271,7 +309,13 @@ public class Server {
 					t[3].start();
 					for (int i = 4; i < 5; i++) 
 					{
-					ss[i] = new ServerSocket((8001-4) + i);
+						 int serverport =0;
+							
+							if(i==4)
+							{
+								serverport=server4portforserver5;
+							}
+					ss[i] = new ServerSocket(serverport);
 					s[i] = ss[i].accept();
 					dos[i] = new DataOutputStream(s[i].getOutputStream());
 					dis[i] = new DataInputStream(s[i].getInputStream());
@@ -338,7 +382,7 @@ public class Server {
 					t[4] = new Thread(new ChannelHandler(s[4]));
 					//start thread for each server
 					t[4].start();
-					//accept client connections
+					
 					ss[5] = new ServerSocket(server5portforclient1);
 					s[5] = ss[5].accept();
 					dos[5] = new DataOutputStream(s[5].getOutputStream());

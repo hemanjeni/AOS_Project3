@@ -30,8 +30,6 @@ public class Message  implements Serializable{
         this.fileName = FileName;
 
 
-        public static long getSerialVersionUID() {
-        return serialVersionUID;
     }
 
     public int getSenderID() {
@@ -53,8 +51,4 @@ public class Message  implements Serializable{
     public MessageType getMsgtype() {
         return msgtype;
     }
-
-
-    }
-
 }

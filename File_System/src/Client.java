@@ -34,6 +34,8 @@ public class Client {
 			
 		int metadataServeraddressforclient1 = Integer.parseInt(prop.getPropValues("metadataServeraddressforclient1"));
 		int metadataServeraddressforclient2 = Integer.parseInt(prop.getPropValues("metadataServeraddressforclient2"));
+		
+		// server ports for client 1 ->10001 client 2---> 10002
 		int server1portforclient1 = Integer.parseInt(prop.getPropValues("server1portforclient1"));
 		int server1portforclient2 = Integer.parseInt(prop.getPropValues("server1portforclient2"));
 		int server2portforclient1 = Integer.parseInt(prop.getPropValues("server2portforclient1"));
@@ -73,8 +75,29 @@ public class Client {
 					// connecting to other servers
 					for (int i = 1; i <=5; i++) 
 					{
-					ss[i] = new ServerSocket(10001);
-					s[i] = ss[i].accept();
+						String serveraddress="";
+						if(i==1)
+						{
+							serveraddress= 	server1Address;
+						}
+						if(i==2)
+						{
+							serveraddress= 	server2Address;
+						}
+						if(i==3)
+						{
+							serveraddress= 	server3Address;
+						}
+						if(i==4)
+						{
+							serveraddress= 	server4Address;
+						}
+						if(i==5)
+						{
+							serveraddress= 	server5Address;
+						}
+					s[i] = new Socket(serveraddress,10001);
+					
 					dos[i] = new DataOutputStream(s[i].getOutputStream());
 					dis[i] = new DataInputStream(s[i].getInputStream());
 
@@ -99,8 +122,29 @@ public class Client {
 					// connecting to other servers
 					for (int i = 1; i <=5; i++) 
 					{
-					ss[i] = new ServerSocket(10002);
-					s[i] = ss[i].accept();
+						String serveraddress="";
+						if(i==1)
+						{
+							serveraddress= 	server1Address;
+						}
+						if(i==2)
+						{
+							serveraddress= 	server2Address;
+						}
+						if(i==3)
+						{
+							serveraddress= 	server3Address;
+						}
+						if(i==4)
+						{
+							serveraddress= 	server4Address;
+						}
+						if(i==5)
+						{
+							serveraddress= 	server5Address;
+						}
+					s[i] = new Socket(serveraddress,10001);
+					
 					dos[i] = new DataOutputStream(s[i].getOutputStream());
 					dis[i] = new DataInputStream(s[i].getInputStream());
 
@@ -108,11 +152,11 @@ public class Client {
 					t[i].start();
 					System.out.print("Starting thread number" + i);
 					logger.info("Starting thread number" + i);
+					
 					}
 					
 				}
 				//server no=3
-							System.out.print("connected to all clients");
 			logger.info("connected to metadata server and servers");
 		} catch (Exception e) {
 			e.printStackTrace();

@@ -80,9 +80,9 @@ public class Server {
 					s[0] = new Socket(metadataServeraddress, metadataServeraddressforserver1);
 					dos[0] = new DataOutputStream(s[0].getOutputStream());
 					dis[0] = new DataInputStream(s[0].getInputStream());
-					t[0] = new Thread(new ChannelHandler(s[0]));
+					Thread t = new Thread(new ChannelHandler(s[0]));
 					//start thread for each server
-					t[0].start();
+					t.start();
 					
 					// connecting to other servers
 					for (int i = 1; i < 5; i++) 
@@ -110,8 +110,8 @@ public class Server {
 					dos[i] = new DataOutputStream(s[i].getOutputStream());
 					dis[i] = new DataInputStream(s[i].getInputStream());
 
-					t[i] = new Thread(new ChannelHandler(s[i]));
-					t[i].start();
+					Thread t2 = new Thread(new ChannelHandler(s[i]));
+					t2.start();
 					System.out.print("Starting thread number" + i);
 					logger.info("Starting thread number" + i);
 					}
@@ -122,8 +122,8 @@ public class Server {
 					dos[5] = new DataOutputStream(s[5].getOutputStream());
 					dis[5] = new DataInputStream(s[5].getInputStream());
 
-					t[5] = new Thread(new ChannelHandler(s[5]));
-					t[5].start();
+					Thread t3= new Thread(new ChannelHandler(s[5]));
+					t3.start();
 					System.out.print("Starting thread number" + 5);
 					logger.info("Starting thread number" + 5);
 					
@@ -132,8 +132,8 @@ public class Server {
 					dos[6] = new DataOutputStream(s[6].getOutputStream());
 					dis[6] = new DataInputStream(s[6].getInputStream());
 
-					t[6] = new Thread(new ChannelHandler(s[6]));
-					t[6].start();
+					Thread t4 = new Thread(new ChannelHandler(s[6]));
+					t4.start();
 					System.out.print("Starting thread number" + 5);
 					logger.info("Starting thread number" + 6);
 					
@@ -145,16 +145,16 @@ public class Server {
 					s[0] = new Socket(metadataServeraddress, metadataServeraddressforserver2);
 					dos[0] = new DataOutputStream(s[0].getOutputStream());
 					dis[0] = new DataInputStream(s[0].getInputStream());
-					t[0] = new Thread(new ChannelHandler(s[0]));
+					Thread t = new Thread(new ChannelHandler(s[0]));
 					//start thread for each server
-					t[0].start();
+					t.start();
 					
 					s[1] = new Socket(server1Address, server1portforserver2);
 					dos[1] = new DataOutputStream(s[1].getOutputStream());
 					dis[1] = new DataInputStream(s[1].getInputStream());
-					t[1] = new Thread(new ChannelHandler(s[1]));
+					Thread t2 = new Thread(new ChannelHandler(s[1]));
 					//start thread for each server
-					t[1].start();
+					t2.start();
 					//connect to server1 first before accepting connections from other clients
 					
 					
@@ -181,8 +181,8 @@ public class Server {
 					System.out.print("Server port created at " + ss[i] + "" + s[i]);
 					logger.info("Server port created at " + ss[i] + "" + s[i]);
 
-					 t[i] = new Thread(new ChannelHandler(s[i]));
-					t[i].start();
+					Thread  t3 = new Thread(new ChannelHandler(s[i]));
+					t3.start();
 					System.out.print("Starting thread number" + i);
 					logger.info("Starting thread number" + i);
 					}
@@ -192,8 +192,8 @@ public class Server {
 					dos[5] = new DataOutputStream(s[5].getOutputStream());
 					dis[5] = new DataInputStream(s[5].getInputStream());
 
-					t[5] = new Thread(new ChannelHandler(s[5]));
-					t[5].start();
+					Thread t4 = new Thread(new ChannelHandler(s[5]));
+					t4.start();
 					System.out.print("Starting thread number" + 5);
 					logger.info("Starting thread number" + 5);
 					
@@ -202,8 +202,8 @@ public class Server {
 					dos[6] = new DataOutputStream(s[6].getOutputStream());
 					dis[6] = new DataInputStream(s[6].getInputStream());
 
-					t[6] = new Thread(new ChannelHandler(s[6]));
-					t[6].start();
+					Thread t5 = new Thread(new ChannelHandler(s[6]));
+					t5.start();
 					System.out.print("Starting thread number" + 5);
 					logger.info("Starting thread number" + 6);
 					
@@ -215,23 +215,23 @@ public class Server {
 					s[0] = new Socket(metadataServeraddress, metadataServeraddressforserver3);
 					dos[0] = new DataOutputStream(s[0].getOutputStream());
 					dis[0] = new DataInputStream(s[0].getInputStream());
-					t[0] = new Thread(new ChannelHandler(s[0]));
+					Thread t = new Thread(new ChannelHandler(s[0]));
 					//start thread for each server
-					t[0].start();
+					t.start();
 					
 					s[1] = new Socket(server1Address, server1portforserver3);
 					dos[1] = new DataOutputStream(s[1].getOutputStream());
 					dis[1] = new DataInputStream(s[1].getInputStream());
-					t[1] = new Thread(new ChannelHandler(s[1]));
+					Thread t2 = new Thread(new ChannelHandler(s[1]));
 					//start thread for each server
-					t[1].start();
+					t2.start();
 					
 					s[2] = new Socket(server1Address, server2portforserver3);
 					dos[2] = new DataOutputStream(s[2].getOutputStream());
 					dis[2] = new DataInputStream(s[2].getInputStream());
-					t[2] = new Thread(new ChannelHandler(s[2]));
+				   Thread t3 = new Thread(new ChannelHandler(s[2]));
 					//start thread for each server
-					t[2].start();
+					t3.start();
 					
 					
 					for (int i = 3; i < 5; i++) 
@@ -253,8 +253,8 @@ public class Server {
 					dis[i] = new DataInputStream(s[i].getInputStream());
 					System.out.print("Server port created at " + ss[i] + "" + s[i]);
 					logger.info("Server port created at " + ss[i] + "" + s[i]);
-					t[i] = new Thread(new ChannelHandler(s[i]));
-					t[i].start();
+					Thread t4 = new Thread(new ChannelHandler(s[i]));
+					t4.start();
 					System.out.print("Starting thread number" + i);
 					logger.info("Starting thread number" + i);
 					}
@@ -264,8 +264,8 @@ public class Server {
 					dos[5] = new DataOutputStream(s[5].getOutputStream());
 					dis[5] = new DataInputStream(s[5].getInputStream());
 
-					t[5] = new Thread(new ChannelHandler(s[5]));
-					t[5].start();
+					Thread t5 = new Thread(new ChannelHandler(s[5]));
+					t5.start();
 					System.out.print("Starting thread number" + 5);
 					logger.info("Starting thread number" + 5);
 					
@@ -274,9 +274,9 @@ public class Server {
 					dos[6] = new DataOutputStream(s[6].getOutputStream());
 					dis[6] = new DataInputStream(s[6].getInputStream());
 
-					t[6] = new Thread(new ChannelHandler(s[6]));
-					t[6].start();
-					System.out.print("Starting thread number" + 5);
+					Thread t6 = new Thread(new ChannelHandler(s[6]));
+					t6.start();
+					System.out.print("Starting thread number" + 6);
 					logger.info("Starting thread number" + 6);
 				}
 				//server no=4
@@ -285,28 +285,28 @@ public class Server {
 					s[0] = new Socket(metadataServeraddress, metadataServeraddressforserver4);
 					dos[0] = new DataOutputStream(s[0].getOutputStream());
 					dis[0] = new DataInputStream(s[0].getInputStream());
-					t[0] = new Thread(new ChannelHandler(s[0]));
+					Thread t = new Thread(new ChannelHandler(s[0]));
 					//start thread for each server
-					t[0].start();
+					t.start();
 					
 					s[1] = new Socket(server1Address, server1portforserver4);
 					dos[1] = new DataOutputStream(s[1].getOutputStream());
 					dis[1] = new DataInputStream(s[1].getInputStream());
-					t[1] = new Thread(new ChannelHandler(s[1]));
+					Thread t2 = new Thread(new ChannelHandler(s[1]));
 					//start thread for each server
-					t[1].start();
+					t2.start();
 					s[2] = new Socket(server2Address, server2portforserver4);
 					dos[2] = new DataOutputStream(s[2].getOutputStream());
 					dis[2] = new DataInputStream(s[2].getInputStream());
-					t[2] = new Thread(new ChannelHandler(s[2]));
+					Thread t3 = new Thread(new ChannelHandler(s[2]));
 					//start thread for each server
-					t[2].start();
+					t3.start();
 					s[3] = new Socket(server3Address, server3portforserver4);
 					dos[3] = new DataOutputStream(s[3].getOutputStream());
 					dis[3] = new DataInputStream(s[3].getInputStream());
-					t[3] = new Thread(new ChannelHandler(s[3]));
+					Thread t4 = new Thread(new ChannelHandler(s[3]));
 					//start thread for each server
-					t[3].start();
+					t4.start();
 					for (int i = 4; i < 5; i++) 
 					{
 						 int serverport =0;
@@ -321,8 +321,8 @@ public class Server {
 					dis[i] = new DataInputStream(s[i].getInputStream());
 					System.out.print("Server port created at " + ss[i] + "" + s[i]);
 					logger.info("Server port created at " + ss[i] + "" + s[i]);
-					 t[i] = new Thread(new ChannelHandler(s[i]));
-					t[i].start();
+					Thread t5 = new Thread(new ChannelHandler(s[i]));
+					t5.start();
 					System.out.print("Starting thread number" + i);
 					logger.info("Starting thread number" + i);
 					}
@@ -332,8 +332,8 @@ public class Server {
 					dos[5] = new DataOutputStream(s[5].getOutputStream());
 					dis[5] = new DataInputStream(s[5].getInputStream());
 
-					t[5] = new Thread(new ChannelHandler(s[5]));
-					t[5].start();
+					Thread t6 = new Thread(new ChannelHandler(s[5]));
+					t6.start();
 					System.out.print("Starting thread number" + 5);
 					logger.info("Starting thread number" + 5);
 					
@@ -342,8 +342,8 @@ public class Server {
 					dos[6] = new DataOutputStream(s[6].getOutputStream());
 					dis[6] = new DataInputStream(s[6].getInputStream());
 
-					t[6] = new Thread(new ChannelHandler(s[6]));
-					t[6].start();
+					Thread t7 = new Thread(new ChannelHandler(s[6]));
+					t7.start();
 					System.out.print("Starting thread number" + 5);
 					logger.info("Starting thread number" + 6);
 				}
@@ -353,43 +353,43 @@ public class Server {
 					s[0] = new Socket(metadataServeraddress, metadataServeraddressforserver5);
 					dos[0] = new DataOutputStream(s[0].getOutputStream());
 					dis[0] = new DataInputStream(s[0].getInputStream());
-					t[0] = new Thread(new ChannelHandler(s[0]));
+					Thread t = new Thread(new ChannelHandler(s[0]));
 					//start thread for each server
-					t[0].start();
+					t.start();
 					
 					
 					s[1] = new Socket(server1Address, server1portforserver5);
 					dos[1] = new DataOutputStream(s[1].getOutputStream());
 					dis[1] = new DataInputStream(s[1].getInputStream());
-					t[1] = new Thread(new ChannelHandler(s[1]));
+					Thread t2 = new Thread(new ChannelHandler(s[1]));
 					//start thread for each server
-					t[1].start();
+					t2.start();
 					s[2] = new Socket(server2Address, server2portforserver5);
 					dos[2] = new DataOutputStream(s[2].getOutputStream());
 					dis[2] = new DataInputStream(s[2].getInputStream());
-					t[2] = new Thread(new ChannelHandler(s[2]));
+					Thread t3 = new Thread(new ChannelHandler(s[2]));
 					//start thread for each server
-					t[2].start();
+					t3.start();
 					s[3] = new Socket(server3Address, server3portforserver5);
 					dos[3] = new DataOutputStream(s[3].getOutputStream());
 					dis[3] = new DataInputStream(s[3].getInputStream());
-					t[3] = new Thread(new ChannelHandler(s[3]));
+					Thread t4 = new Thread(new ChannelHandler(s[3]));
 					//start thread for each server
-					t[3].start();
+					t4.start();
 					s[4] = new Socket(server4Address, server4portforserver5);
 					dos[4] = new DataOutputStream(s[4].getOutputStream());
 					dis[4] = new DataInputStream(s[4].getInputStream());
-					t[4] = new Thread(new ChannelHandler(s[4]));
+					Thread t5 = new Thread(new ChannelHandler(s[4]));
 					//start thread for each server
-					t[4].start();
+					t5.start();
 					
 					ss[5] = new ServerSocket(server5portforclient1);
 					s[5] = ss[5].accept();
 					dos[5] = new DataOutputStream(s[5].getOutputStream());
 					dis[5] = new DataInputStream(s[5].getInputStream());
 
-					t[5] = new Thread(new ChannelHandler(s[5]));
-					t[5].start();
+					Thread t6 = new Thread(new ChannelHandler(s[5]));
+					t6.start();
 					System.out.print("Starting thread number" + 5);
 					logger.info("Starting thread number" + 5);
 					
@@ -398,8 +398,8 @@ public class Server {
 					dos[6] = new DataOutputStream(s[6].getOutputStream());
 					dis[6] = new DataInputStream(s[6].getInputStream());
 
-					t[6] = new Thread(new ChannelHandler(s[6]));
-					t[6].start();
+					Thread t7 = new Thread(new ChannelHandler(s[6]));
+					t7.start();
 					System.out.print("Starting thread number" + 5);
 					logger.info("Starting thread number" + 6);
 				}
@@ -433,7 +433,15 @@ public class Server {
 
 		public void run() {
 			try {
-
+				System.out.println("Inside run");
+				while(true)	
+				{
+					if (datainput.available() > 0)
+					{
+						logger.info("data available");
+					}
+					
+				}
 				
 				}
 			 catch (Exception ex) {

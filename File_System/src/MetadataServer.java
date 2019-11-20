@@ -45,8 +45,8 @@ public class MetadataServer {
 			dos[i] = new DataOutputStream(s[i].getOutputStream());
 			dis[i] = new DataInputStream(s[i].getInputStream());
 
-			t[i] = new Thread(new ChannelHandler(s[i]));
-			t[i].start();
+			Thread t = new Thread(new ChannelHandler(s[i]));
+			t.start();
 			System.out.print("Starting thread number" + i);
 			logger.info("Starting thread number" + i);
 			}
@@ -76,8 +76,12 @@ public class MetadataServer {
 
 		public void run() {
 			try {
-
-				
+System.out.println("Inside run");
+			while(true)	
+				if (datainput.available() > 0)
+				{
+					logger.info("data available");
+				}
 				}
 			 catch (Exception ex) {
 				ex.printStackTrace();

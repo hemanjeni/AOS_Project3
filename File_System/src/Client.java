@@ -67,41 +67,47 @@ public class Client {
 					s[0] = new Socket(metadataServeraddress, metadataServeraddressforclient1);
 					dos[0] = new DataOutputStream(s[0].getOutputStream());
 					dis[0] = new DataInputStream(s[0].getInputStream());
-					t[0] = new Thread(new ChannelHandler(s[0]));
+					Thread t = new Thread(new ChannelHandler(s[0]));
 					//start thread for each server
-					t[0].start();
+					t.start();
 					
 					// connecting to other servers
 					for (int i = 1; i <=5; i++) 
 					{
 						String serveraddress="";
+						int port =0;
 						if(i==1)
 						{
 							serveraddress= 	server1Address;
+							port = server1portforclient1;
 						}
 						if(i==2)
 						{
 							serveraddress= 	server2Address;
+							port = server2portforclient1;
 						}
 						if(i==3)
 						{
 							serveraddress= 	server3Address;
+							port = server3portforclient1;
 						}
 						if(i==4)
 						{
 							serveraddress= 	server4Address;
+							port = server4portforclient1;
 						}
 						if(i==5)
 						{
 							serveraddress= 	server5Address;
+							port = server5portforclient1;
 						}
-					s[i] = new Socket(serveraddress,10001);
+					s[i] = new Socket(serveraddress,port);
 					
 					dos[i] = new DataOutputStream(s[i].getOutputStream());
 					dis[i] = new DataInputStream(s[i].getInputStream());
 
-					t[i] = new Thread(new ChannelHandler(s[i]));
-					t[i].start();
+					Thread t2 = new Thread(new ChannelHandler(s[i]));
+					t2.start();
 					System.out.print("Starting thread number" + i);
 					logger.info("Starting thread number" + i);
 					}
@@ -114,41 +120,47 @@ public class Client {
 					s[0] = new Socket(metadataServeraddress, metadataServeraddressforclient2);
 					dos[0] = new DataOutputStream(s[0].getOutputStream());
 					dis[0] = new DataInputStream(s[0].getInputStream());
-					t[0] = new Thread(new ChannelHandler(s[0]));
+					Thread t = new Thread(new ChannelHandler(s[0]));
 					//start thread for each server
-					t[0].start();
+					t.start();
 					
 					// connecting to other servers
 					for (int i = 1; i <=5; i++) 
 					{
 						String serveraddress="";
+						int port =0;
 						if(i==1)
 						{
 							serveraddress= 	server1Address;
+							port = server1portforclient2;
 						}
 						if(i==2)
 						{
 							serveraddress= 	server2Address;
+							port = server2portforclient2;
 						}
 						if(i==3)
 						{
 							serveraddress= 	server3Address;
+							port = server3portforclient2;
 						}
 						if(i==4)
 						{
 							serveraddress= 	server4Address;
+							port = server4portforclient2;
 						}
 						if(i==5)
 						{
 							serveraddress= 	server5Address;
+							port = server5portforclient2;
 						}
-					s[i] = new Socket(serveraddress,10002);
+					s[i] = new Socket(serveraddress,port);
 					
 					dos[i] = new DataOutputStream(s[i].getOutputStream());
 					dis[i] = new DataInputStream(s[i].getInputStream());
 
-					t[i] = new Thread(new ChannelHandler(s[i]));
-					t[i].start();
+					Thread t2 = new Thread(new ChannelHandler(s[i]));
+					t2.start();
 					System.out.print("Starting thread number" + i);
 					logger.info("Starting thread number" + i);
 					
@@ -182,7 +194,13 @@ public class Client {
 
 		public void run() {
 			try {
-
+				System.out.println("Inside run");
+				while(true)	{
+					if (datainput.available() > 0)
+					{
+						logger.info("data available");
+					}
+					}
 				
 				}
 			 catch (Exception ex) {

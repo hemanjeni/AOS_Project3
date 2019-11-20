@@ -61,6 +61,7 @@ public class MetadataServer {
         }
 
 
+        //reading from queue for new messages
         while(true){
 
             if(msgQueue.size() !=0){

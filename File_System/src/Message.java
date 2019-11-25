@@ -8,6 +8,15 @@ public class Message  implements Serializable, Comparable<Message>{
     private int index;
     private String fileName;
     private MessageType msgtype;
+    private String data;
+
+    // for metaDeta
+    private String linuxFilename;
+    private String replicaName;
+
+
+    public Message(){}
+
 
     public Message(int senderUID, MessageType Msgtype, String FileName, int index, int offset ) {
         this.senderID = senderUID;
@@ -62,13 +71,38 @@ public class Message  implements Serializable, Comparable<Message>{
         this.fileName = fileName;
     }
 
+    public String getLinuxFilename() {
+        return linuxFilename;
+    }
+
+    public void setLinuxFilename(String linuxFilename) {
+        this.linuxFilename = linuxFilename;
+    }
+
     public MessageType getMsgtype() {
         return msgtype;
+    }
+
+    public String getReplicaName() {
+        return replicaName;
+    }
+
+    public void setReplicaName(String replicaName) {
+        this.replicaName = replicaName;
     }
 
     public void setMsgtype(MessageType msgtype) {
         this.msgtype = msgtype;
     }
+
+    public String getData() {
+        return data;
+    }
+
+    public void setData(String data) {
+        this.data = data;
+    }
+
     @Override
     public int compareTo(Message o) {
         return 0;

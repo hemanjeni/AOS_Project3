@@ -1,4 +1,5 @@
 //package testing;
+import javax.sound.midi.Soundbank;
 import java.io.*;
         import java.net.*;
         import java.util.*;
@@ -35,7 +36,7 @@ public class MetadataServer {
     private Map<Integer, Boolean> serversConnected;
     private Map<Integer, Long> lastHeartbeat;
 
-    private Map<String, Integer> fileNameMappling;
+    private Map<String, Integer> fileNameMapping;
 
 
     public MetadataServer(String args[]) throws IOException {
@@ -52,6 +53,7 @@ public class MetadataServer {
         serversConnected = new HashMap<>();
         lastHeartbeat = new HashMap<>();
         chunkSize = new HashMap<>();
+        fileNameMapping = new HashMap<>();
 
 
 
@@ -88,9 +90,9 @@ public class MetadataServer {
             // accept connections from clients
         }
         catch (IOException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
+
 
 
         //reading from queue for new messages
@@ -111,54 +113,62 @@ public class MetadataServer {
                 Map<Integer,Boolean> temp = new HashMap<>();
 
 
-                if(msg.getMsgtype() == MessageType.Create){
-                    System.out.println("heartBeat message received from  Client id :"+ msg.getSenderID());
+                if(msg.getMsgtype() == MessageType.CREATE){
+                    System.out.println("Create message received from  Client id :"+ msg.getSenderID());
                     // 3 server selected to create a linux file with with chunk 1
                     List<Integer> serversSelected = randomServers();
+                    serversSelected.forEach(i -> System.out.println("seleted server for create request"+i));
+
                     String linuxFilename = msg.getFileName();
+                    System.out.println("file name"+msg.getFileName());
+                    String[] tempLinuxFileName = linuxFilename.split("\\.");
+
                     String chunkName;
                     int tempVal;
 
-                    if(fileNameMappling.containsKey(linuxFilename)){
-                        tempVal= fileNameMappling.get(linuxFilename);
-                        chunkName = linuxFilename+(tempVal++);
-                        fileNameMappling.put(linuxFilename,tempVal);
+                    if(fileNameMapping.containsKey(linuxFilename)){
+                        tempVal= fileNameMapping.get(linuxFilename);
+                        chunkName = tempLinuxFileName[0]+"_"+(tempVal++)+"."+tempLinuxFileName[1];
+                        fileNameMapping.put(linuxFilename,tempVal);
                     }else {
-                        tempVal = 0;
-                        chunkName = linuxFilename+(tempVal++);
-                        fileNameMappling.put(linuxFilename,tempVal);
+                        tempVal = 1;
+                        chunkName = tempLinuxFileName[0]+"_"+(tempVal++)+"."+tempLinuxFileName[1];
+                        fileNameMapping.put(linuxFilename,tempVal);
+                        System.out.println("chunk name for new created file"+chunkName);
                     }
 
                     //below code will be used for future purpose.
+                    linuxfileToChunks.get(linuxFilename).add(chunkName);
 					for(int i : serversSelected) {
-						if (temp.get(i)) {
 						    /*it will call the function to send message to create chunk to the selected server where i
 						    is ID of server
                             */
 						    if(serversConnected.get(i)) {
-                                String replicaName = chunkName + i + tempVal;
-                                sendMessageToServer(i, MessageType.Create, chunkName, linuxFilename, replicaName,
-                                        null, (long) 0);
+                                String replicaName = chunkName +"_"+ i +"."+tempLinuxFileName[1];
+                                System.out.println("replica name for new created file"+replicaName);
+                                sendMessageToServer(i, MessageType.CREATE, chunkName, linuxFilename, replicaName,  (long) 0);
                             }
 						    else{
                                 System.out.println("server is dead, ID:" + i);
                             }
-						}
+
 
 					}
 
                 }
 
-                if(msg.getMsgtype() == MessageType.Append){
+
+                if(msg.getMsgtype() == MessageType.APPEND){
                     System.out.println("Append message received from  Client id :"+ msg.getSenderID());
                     String linuxFileName = msg.getFileName();
-                    //todo heck with KD
                     List<String> chunksNames = linuxfileToChunks.get(linuxFileName);
                     String lastChunk = chunksNames.get(chunksNames.size()-1);
                     List<String> replicasName = chunkToReplicas.get(lastChunk);
                     List<Integer> replicasToServers = new ArrayList<>();
                     List<String> replicas = new ArrayList<>();
-                    AppendMessage message = new AppendMessage();
+
+
+
                         for(String replica : replicasName){
                                 int serverID = replicaToServer.get(replica);
                                 if(serversConnected.get(serverID)) {
@@ -168,10 +178,14 @@ public class MetadataServer {
                                 }
 
                         }
-                        message.setServerList(replicasToServers);
-                        message.setReplicaList(replicas);
-                        message.setFileName(linuxFileName);
-                        message.setMsgtype(MessageType.Append);
+
+                        replicasToServers.forEach(i-> System.out.println("replicas to servers" + i));
+                        replicas.forEach(i-> System.out.println("replicas list:  "+i));
+
+                        Message message = new Message(1, MessageType.APPENDRESPONSE,
+                                replicaToServer.get(0),replicaToServer.get(1),replicaToServer.get(2),
+                                replicas.get(0),replicas.get(1),replicas.get(2),linuxFileName);
+
 
                     Socket socket = null; //todo add socket value
                     ObjectOutputStream os = new ObjectOutputStream(socket.getOutputStream());
@@ -180,38 +194,44 @@ public class MetadataServer {
                 }
 
 
-                else if(msg.getMsgtype() == MessageType.Read){
+                else if(msg.getMsgtype() == MessageType.READ){
                     System.out.println("Read message received from  Client id :"+ msg.getSenderID());
                     String linuxFileName = msg.getFileName();
                     long offset = msg.getOffset();
+                    System.out.println(" offset : "+offset);
                     //check with KD
                     List<String> chunks = linuxfileToChunks.get(linuxFileName);
+                    System.out.println("linux file name "+linuxFileName);
+                    chunks.forEach(i-> System.out.println("chunk names : "+i));
                     Long size = (long)0;
                     String replicaToRead;
                     int serverID;
 
                         for(String chunk : chunks){
                             size = size+chunkSize.get(chunk);
+
+                            System.out.println("chunk size updated : "+size);
                             if(offset< size){
                                 //return that file
-                                replicaToRead = chunkToReplicas.get(chunk).get(1);
+                                replicaToRead = chunkToReplicas.get(chunk).get(0);
+                                System.out.println("replica name for the read : "+replicaToRead);
                                 serverID = replicaToServer.get(replicaToRead);
+                                System.out.println("server id that is being used+ "+serverID);
 
-                                sendMessageToServer(serverID,MessageType.Read,chunk,linuxFileName,replicaToRead,
-                                        null,(long)0);
+                                sendMessageToServer(serverID,MessageType.READRESPONSE,chunk,linuxFileName,replicaToRead,
+                                        (long)0);
 
                                 break;
                             }
                         }
-
                 }
 
                 //send servers that you are outdated!
                 //And tell which files are outdated!
 
-                else if(msg.getMsgtype() == MessageType.Heartbeat){
+                else if(msg.getMsgtype() == MessageType.HEARTBEAT){
 
-                    //todo when you receive replica size (offset) store the same size to chunk also
+                    //todo when mserver receives replica size (offset) store the same size to chunk also
                     heartbeatMessage heartbeatmsg = (heartbeatMessage) msg;
                     System.out.println("heartBeat message received from  server id :"+ msg.getSenderID());
                     int serverID = msg.getSenderID();
@@ -227,6 +247,9 @@ public class MetadataServer {
                             fileName = heartbeats[i].getFileName();
                             linuxFileName = heartbeats[i].getLinuxFileName();
                             senderID= heartbeats[i].getSenderID();
+
+                            //todo check how server is naming chunk index
+
                             chunkIndex = heartbeats[i].getChunkindex();
                             offset = heartbeats[i].getOffset();
                             versionNo = heartbeats[i].getVersion_num();
@@ -237,6 +260,7 @@ public class MetadataServer {
                             List<String> replicas = chunkToReplicas.get(chunkName);
                             int tempVersion = 0;
                             int version=0;
+                            Message message;
 
                                 for(String replica : replicas){
                                     version = replicaVersion.get(replica);
@@ -251,13 +275,17 @@ public class MetadataServer {
                                         if(!serversConnected.get(replica)){
                                             if(version != tempVersion){
 
+                                                message = new Message(1, MessageType.UPDATEREPLICA, serverID, replica, linuxFileName);
+                                                Socket socket = null; //todo add socket value
+                                                ObjectOutputStream os = new ObjectOutputStream(socket.getOutputStream());
+                                                os.writeObject(message);
                                                 //send message that you need to update the replicas
                                             }
                                         }
 
                                         replicaVersion.put(replica, versionNo);
                                         replicaSize.put(replica, offset);
-                                        chunkSize.put(chunkName,offset); //to check the previous chunck is same size and then store future reff
+                                        chunkSize.put(chunkName,offset); //to check the previous chunck is same size and then store. future reff
                                     }
                                 }
                         }
@@ -266,7 +294,6 @@ public class MetadataServer {
 
             }
         }
-
 
     }
 
@@ -305,25 +332,14 @@ public class MetadataServer {
         }
     }
 
-
-
-    private void sendMessageToServer(){
-
-        //todo
-        String addressOfServer;
-        int port;
-
-
-    }
-
     private void sendMessageToServer(int serverID, MessageType type, String chunkName, String linuxFileName ,
-                                     String replicaName, String messageData, Long size){
+                                     String replicaName, Long size){
 
         //todo use serverId
         String addressOfServer = null; // ip
         int port = 0;//port
         Socket socket = null;
-        int counter=0;
+
 
         try {
             System.out.println("sending message to server to create file ---- Create/Append/Read file step 1");
@@ -331,17 +347,15 @@ public class MetadataServer {
             ObjectOutputStream os = new ObjectOutputStream(socket.getOutputStream());
 
             Message message = new Message();
-            message.setLinuxFilename(linuxFileName);
-            message.setReplicaName(replicaName);
+            message.setFileName(linuxFileName);
+            message.setChunkname(replicaName);
             message.setMsgtype(type);
-            message.setData(messageData);
-
+            message.setSenderID(1);
+            message.setServer(serverID);
             os.writeObject(message);
 
-                if(counter == 0 && type == MessageType.Create){
+                if(type == MessageType.CREATE){
                     linuxfileToChunks.putIfAbsent(linuxFileName, new ArrayList<>());
-                    linuxfileToChunks.get(linuxFileName).add(chunkName);
-                    counter++;
                     updateMetaData(chunkName, serverID, linuxFileName, replicaName , size);
                 }
 
@@ -383,7 +397,7 @@ public class MetadataServer {
         int temp = 2;
         int rand;
         while (temp>0){
-            rand = randomNumber.nextInt(list.size()+1);
+            rand = randomNumber.nextInt(list.size());
             list.remove(rand);
             temp--;
         }
@@ -396,7 +410,6 @@ public class MetadataServer {
         try {
             new MetadataServer(args);
         } catch (IOException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
     }

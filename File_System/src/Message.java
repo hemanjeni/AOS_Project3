@@ -8,6 +8,7 @@ public class Message  implements Serializable{
 	private int index;
 	private String fileName;
 	private MessageType msgtype;
+
 	private int server;
 	private int server1;
 	private int server2;
@@ -42,7 +43,9 @@ public class Message  implements Serializable{
 	// ABORT FROM S->C 
 	//APPEND COMPLETE C->MS
 	//APPEND INCOMPLETE C->MS
-	
+
+    public Message(){}
+
 	// filename is the name decided by the metadata
 	public Message(int senderUID, MessageType Msgtype, String FileName) {
 		this.senderID = senderUID;
@@ -61,18 +64,19 @@ public class Message  implements Serializable{
 		this.chunkoffset = chunkoffset;
 	}
 	//APPENDRESPONSE from MS->C 
-	public Message(int senderUID, MessageType Msgtype,String server1,String server2,String server3,String chunkname1,String chunkname2, String chunkname3, String FileName, int chunkoffset ) {
+	public Message(int senderUID, MessageType Msgtype,int server1,int server2,int server3,String chunkname1,String chunkname2, String chunkname3, String FileName ) {
 		this.senderID = senderUID;
 		this.msgtype = Msgtype;
 		this.fileName = FileName;
-		this.server1= Integer.parseInt(server1);
-		this.server2= Integer.parseInt(server2);
-		this.server3= Integer.parseInt(server3);
+		this.server1= server1;
+		this.server2= server2;
+		this.server3= server3;
 		this.chunkname1= chunkname1;
 		this.chunkname2= chunkname2;
-		this.chunkname3= chunkname3; 
-		this.chunkoffset = chunkoffset;
+		this.chunkname3= chunkname3;
 	}
+
+	//  todo ?
 	// CREATERESPONSE MS->C 
 	public Message(int senderUID, MessageType Msgtype,String server1,String server2,String server3,String chunkname1,String chunkname2, String chunkname3, String FileName) {
 		this.senderID = senderUID;
@@ -86,12 +90,13 @@ public class Message  implements Serializable{
 		this.chunkname3= chunkname3; 
 
 	}
-	//UPDATE REPLICA MS->S 
-	public Message(int senderUID, MessageType Msgtype,String server1,String chunkname1,  String FileName) {
+
+	//UPDATE REPLICA MS->S
+	public Message(int senderUID, MessageType Msgtype,int server1,String chunkname1,  String FileName) {
 		this.senderID = senderUID;
 		this.msgtype = Msgtype;
 		this.fileName = FileName;
-		this.server1= Integer.parseInt(server1);
+		this.server1= server1;
 		this.chunkname1= chunkname1;
 
 	}

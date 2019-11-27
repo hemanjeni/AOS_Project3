@@ -8,7 +8,6 @@ public class Message  implements Serializable{
 	private int index;
 	private String fileName;
 	private MessageType msgtype;
-
 	private int server;
 	private int server1;
 	private int server2;
@@ -23,8 +22,11 @@ public class Message  implements Serializable{
 	private String chunkname3;// chunk name at server in third position in the list sent by metadata server to client(APPENDRESPONSE)
 	private int sizeofappend;
 	private String appendString;
+	private String readcharacters;
 
-
+	public Message() {
+		
+	}
 
 
 	// READ CLIENT -> MS AND 
@@ -43,10 +45,8 @@ public class Message  implements Serializable{
 	// ABORT FROM S->C 
 	//APPEND COMPLETE C->MS
 	//APPEND INCOMPLETE C->MS
-
-    public Message(){}
-
-	// filename is the name decided by the metadata
+	
+	// filename is the name decided by the metadata AND can be used for readfile response
 	public Message(int senderUID, MessageType Msgtype, String FileName) {
 		this.senderID = senderUID;
 		this.msgtype = Msgtype;
@@ -54,17 +54,34 @@ public class Message  implements Serializable{
 
 
 	}
-	//  READRESPONSE MS->C 
-	public Message(int senderUID, MessageType Msgtype,String server, String FileName,String chunkNameatServer, int chunkoffset ) {
+	//READFILE RESPONSE S->S , S->C
+	public Message(int senderUID, MessageType Msgtype, String FileName,String filescharacters) {
 		this.senderID = senderUID;
 		this.msgtype = Msgtype;
 		this.fileName = FileName;
-		this.server= Integer.parseInt(server);
+		this.readcharacters = filescharacters;
+
+
+	}
+	public String getReadcharacters() {
+		return readcharacters;
+	}
+
+	public void setReadcharacters(String readcharacters) {
+		this.readcharacters = readcharacters;
+	}
+
+	//  READRESPONSE MS->C 
+	public Message(int senderUID, MessageType Msgtype,int server, String FileName,String chunkNameatServer, int chunkoffset ) {
+		this.senderID = senderUID;
+		this.msgtype = Msgtype;
+		this.fileName = FileName;
+		this.server= server;
 		this.chunkname = chunkNameatServer;
 		this.chunkoffset = chunkoffset;
 	}
 	//APPENDRESPONSE from MS->C 
-	public Message(int senderUID, MessageType Msgtype,int server1,int server2,int server3,String chunkname1,String chunkname2, String chunkname3, String FileName ) {
+	public Message(int senderUID, MessageType Msgtype,int server1,int server2,int server3,String chunkname1,String chunkname2, String chunkname3, String FileName, int chunkoffset ) {
 		this.senderID = senderUID;
 		this.msgtype = Msgtype;
 		this.fileName = FileName;
@@ -73,25 +90,23 @@ public class Message  implements Serializable{
 		this.server3= server3;
 		this.chunkname1= chunkname1;
 		this.chunkname2= chunkname2;
-		this.chunkname3= chunkname3;
+		this.chunkname3= chunkname3; 
+		this.chunkoffset = chunkoffset;
 	}
-
-	//  todo ?
 	// CREATERESPONSE MS->C 
-	public Message(int senderUID, MessageType Msgtype,String server1,String server2,String server3,String chunkname1,String chunkname2, String chunkname3, String FileName) {
+	public Message(int senderUID, MessageType Msgtype,int server1,int server2,int server3,String chunkname1,String chunkname2, String chunkname3, String FileName) {
 		this.senderID = senderUID;
 		this.msgtype = Msgtype;
 		this.fileName = FileName;
-		this.server1= Integer.parseInt(server1);
-		this.server2= Integer.parseInt(server2);
-		this.server3= Integer.parseInt(server3);
+		this.server1= server1;
+		this.server2= server2;
+		this.server3= server3;
 		this.chunkname1= chunkname1;
 		this.chunkname2= chunkname2;
 		this.chunkname3= chunkname3; 
 
 	}
-
-	//UPDATE REPLICA MS->S
+	//UPDATE REPLICA MS->S 
 	public Message(int senderUID, MessageType Msgtype,int server1,String chunkname1,  String FileName) {
 		this.senderID = senderUID;
 		this.msgtype = Msgtype;

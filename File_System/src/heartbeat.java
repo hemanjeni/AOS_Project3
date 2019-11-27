@@ -1,12 +1,20 @@
+import java.io.Serializable;
 
-public class heartbeat {
+public class heartbeat implements Serializable{
 
 	
 	//name of linux file ,version_num, offset, chunk index, filename
 	
 	    private int senderID;
 	    private int chunkindex;
-	    public heartbeat() {
+	    private int lastoffset;
+	    public int getLastoffset() {
+			return lastoffset;
+		}
+		public void setLastoffset(int lastoffset) {
+			this.lastoffset = lastoffset;
+		}
+		public heartbeat() {
 			super();
 		}
 
@@ -55,7 +63,7 @@ public class heartbeat {
 		}
 		
 		 public heartbeat( int senderID,   String fileName,  String linuxFileName,  int chunkindex,
-		  int offset, int version_num)
+		  int offset, int version_num, int lastoffset)
 		 {
 			    this.senderID = senderID;
 		        this.fileName = fileName;
@@ -63,6 +71,7 @@ public class heartbeat {
 		        this.chunkindex = chunkindex;
 		        this.offset = offset; 
 		        this.version_num = version_num; 
+		        this.lastoffset=lastoffset;
 		 }
 		   
 }

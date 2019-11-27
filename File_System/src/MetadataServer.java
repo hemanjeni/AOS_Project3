@@ -28,10 +28,14 @@ public class MetadataServer {
     private Map<String, Integer> chunkVersion;
     private Map<String, Integer> replicaVersion;
     private Map<String, Long> replicaSize;
+    private Map<String ,Long> chunkSize;
+    private Map<String, Integer> replicaOffset;
 
 
     private Map<Integer, Boolean> serversConnected;
     private Map<Integer, Long> lastHeartbeat;
+
+    private Map<String, Integer> fileNameMappling;
 
 
     public MetadataServer(String args[]) throws IOException {
@@ -43,9 +47,11 @@ public class MetadataServer {
         replicaToChunk = new HashMap<>();
         replicaVersion = new HashMap<>();
         replicaSize = new HashMap<>();
+        replicaOffset = new HashMap<>();
 
         serversConnected = new HashMap<>();
         lastHeartbeat = new HashMap<>();
+        chunkSize = new HashMap<>();
 
 
 
@@ -95,7 +101,6 @@ public class MetadataServer {
                         (System.currentTimeMillis() / 1000) - lastHeartbeat.get(serverID) >= 15) {
                     serversConnected.put(serverID, false);
                 }
-
             }
 
             if(msgQueue.size() !=0){
@@ -107,21 +112,31 @@ public class MetadataServer {
 
 
                 if(msg.getMsgtype() == MessageType.Create){
+                    System.out.println("heartBeat message received from  Client id :"+ msg.getSenderID());
                     // 3 server selected to create a linux file with with chunk 1
                     List<Integer> serversSelected = randomServers();
                     String linuxFilename = msg.getFileName();
-                    String chunkName =  linuxFilename + rand.nextInt(100);
+                    String chunkName;
+                    int tempVal;
 
+                    if(fileNameMappling.containsKey(linuxFilename)){
+                        tempVal= fileNameMappling.get(linuxFilename);
+                        chunkName = linuxFilename+(tempVal++);
+                        fileNameMappling.put(linuxFilename,tempVal);
+                    }else {
+                        tempVal = 0;
+                        chunkName = linuxFilename+(tempVal++);
+                        fileNameMappling.put(linuxFilename,tempVal);
+                    }
 
                     //below code will be used for future purpose.
-
 					for(int i : serversSelected) {
 						if (temp.get(i)) {
 						    /*it will call the function to send message to create chunk to the selected server where i
 						    is ID of server
                             */
 						    if(serversConnected.get(i)) {
-                                String replicaName = chunkName + i + rand.nextInt(10);
+                                String replicaName = chunkName + i + tempVal;
                                 sendMessageToServer(i, MessageType.Create, chunkName, linuxFilename, replicaName,
                                         null, (long) 0);
                             }
@@ -135,57 +150,118 @@ public class MetadataServer {
                 }
 
                 if(msg.getMsgtype() == MessageType.Append){
+                    System.out.println("Append message received from  Client id :"+ msg.getSenderID());
                     String linuxFileName = msg.getFileName();
-                    String dataForAppend = msg.getData();
-                    long appendDateSize = dataForAppend.getBytes().length;
-                    //check with KD
+                    //todo heck with KD
                     List<String> chunksNames = linuxfileToChunks.get(linuxFileName);
                     String lastChunk = chunksNames.get(chunksNames.size()-1);
                     List<String> replicasName = chunkToReplicas.get(lastChunk);
-
+                    List<Integer> replicasToServers = new ArrayList<>();
+                    List<String> replicas = new ArrayList<>();
+                    AppendMessage message = new AppendMessage();
                         for(String replica : replicasName){
-                            Long currentReplicaSize = replicaSize.get(replica);
-                            if(4096 - currentReplicaSize > appendDateSize){
                                 int serverID = replicaToServer.get(replica);
                                 if(serversConnected.get(serverID)) {
-                                    sendMessageToServer(serverID, MessageType.Append, lastChunk, linuxFileName, replica,
-                                            dataForAppend, currentReplicaSize + appendDateSize);
+                                    replicasToServers.add(serverID);
+                                    replicas.add(replica);
 
-                                    //update metaData here
-                                    replicaSize.put(replica, currentReplicaSize + appendDateSize);
-                                /* todo update offset values here! need hasmap with values that has starting offset and
-                                ending value of offset */
                                 }
-                            }
-
-                            else{
-                                // to create file 2 phase commite this will be an issue
-                            }
 
                         }
+                        message.setServerList(replicasToServers);
+                        message.setReplicaList(replicas);
+                        message.setFileName(linuxFileName);
+                        message.setMsgtype(MessageType.Append);
+
+                    Socket socket = null; //todo add socket value
+                    ObjectOutputStream os = new ObjectOutputStream(socket.getOutputStream());
+                    os.writeObject(message);
 
                 }
 
 
                 else if(msg.getMsgtype() == MessageType.Read){
+                    System.out.println("Read message received from  Client id :"+ msg.getSenderID());
                     String linuxFileName = msg.getFileName();
-
+                    long offset = msg.getOffset();
                     //check with KD
-                    List<String> chunkNames = linuxfileToChunks.get(linuxFileName);
-                    int offset = msg.getOffset();
+                    List<String> chunks = linuxfileToChunks.get(linuxFileName);
+                    Long size = (long)0;
+                    String replicaToRead;
+                    int serverID;
 
+                        for(String chunk : chunks){
+                            size = size+chunkSize.get(chunk);
+                            if(offset< size){
+                                //return that file
+                                replicaToRead = chunkToReplicas.get(chunk).get(1);
+                                serverID = replicaToServer.get(replicaToRead);
 
+                                sendMessageToServer(serverID,MessageType.Read,chunk,linuxFileName,replicaToRead,
+                                        null,(long)0);
 
-
+                                break;
+                            }
+                        }
 
                 }
+
+                //send servers that you are outdated!
+                //And tell which files are outdated!
+
                 else if(msg.getMsgtype() == MessageType.Heartbeat){
+
+                    //todo when you receive replica size (offset) store the same size to chunk also
+                    heartbeatMessage heartbeatmsg = (heartbeatMessage) msg;
+                    System.out.println("heartBeat message received from  server id :"+ msg.getSenderID());
                     int serverID = msg.getSenderID();
-                    serversConnected.put(serverID, true);
                     lastHeartbeat.put(serverID,System.currentTimeMillis() / 1000);
                     //todo data update as per sending
+                    String linuxFileName;
+                    String fileName; //not required
+                    int senderID, chunkIndex, versionNo;
+                    long offset;
 
+                    heartbeat[] heartbeats = heartbeatmsg.getHeartBeats();
+                        for(int i=0;i<heartbeats.length;i++){
+                            fileName = heartbeats[i].getFileName();
+                            linuxFileName = heartbeats[i].getLinuxFileName();
+                            senderID= heartbeats[i].getSenderID();
+                            chunkIndex = heartbeats[i].getChunkindex();
+                            offset = heartbeats[i].getOffset();
+                            versionNo = heartbeats[i].getVersion_num();
+                            System.out.println("linux file is under processing now"+linuxFileName);
 
+                            List<String> chunks = linuxfileToChunks.get(linuxFileName);
+                            String chunkName = chunks.get(chunkIndex);
+                            List<String> replicas = chunkToReplicas.get(chunkName);
+                            int tempVersion = 0;
+                            int version=0;
+
+                                for(String replica : replicas){
+                                    version = replicaVersion.get(replica);
+                                    if(version > tempVersion){
+                                        tempVersion = version;
+                                    }
+
+                                    System.out.println("replica is under processing now");
+                                    if(senderID == replicaToServer.get(replica)){
+
+                                        //when servers was dead and got connected again
+                                        if(!serversConnected.get(replica)){
+                                            if(version != tempVersion){
+
+                                                //send message that you need to update the replicas
+                                            }
+                                        }
+
+                                        replicaVersion.put(replica, versionNo);
+                                        replicaSize.put(replica, offset);
+                                        chunkSize.put(chunkName,offset); //to check the previous chunck is same size and then store future reff
+                                    }
+                                }
+                        }
+                        serversConnected.put(serverID,true);
                 }
 
             }
@@ -250,7 +326,7 @@ public class MetadataServer {
         int counter=0;
 
         try {
-            System.out.println("sending message to server to create file ---- Create/Append file step 1");
+            System.out.println("sending message to server to create file ---- Create/Append/Read file step 1");
             socket = new Socket(addressOfServer, port);
             ObjectOutputStream os = new ObjectOutputStream(socket.getOutputStream());
 
@@ -261,6 +337,7 @@ public class MetadataServer {
             message.setData(messageData);
 
             os.writeObject(message);
+
                 if(counter == 0 && type == MessageType.Create){
                     linuxfileToChunks.putIfAbsent(linuxFileName, new ArrayList<>());
                     linuxfileToChunks.get(linuxFileName).add(chunkName);
@@ -268,7 +345,7 @@ public class MetadataServer {
                     updateMetaData(chunkName, serverID, linuxFileName, replicaName , size);
                 }
 
-            System.out.println("sending message to server to create file ---- Create/Append file step 2");
+            System.out.println("sending message to server to create file ---- Create/Append/Read file step 2");
 
         } catch (IOException e) {
             e.printStackTrace();

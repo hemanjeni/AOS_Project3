@@ -41,6 +41,7 @@ public class Message  implements Serializable{
 	// AGREED FROM S->C, 
 	// ABORT FROM S->C 
 	//APPEND COMPLETE C->MS
+	//APPEND INCOMPLETE C->MS
 	
 	// filename is the name decided by the metadata
 	public Message(int senderUID, MessageType Msgtype, String FileName) {

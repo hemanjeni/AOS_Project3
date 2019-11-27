@@ -37,6 +37,7 @@ public class MetadataServer {
     private Map<Integer, Long> lastHeartbeat;
 
     private Map<String, Integer> fileNameMapping;
+    static   HashMap<Integer,Socket> connections;
 
 
     public MetadataServer(String args[]) throws IOException {
@@ -54,7 +55,7 @@ public class MetadataServer {
         lastHeartbeat = new HashMap<>();
         chunkSize = new HashMap<>();
         fileNameMapping = new HashMap<>();
-
+        connections = new HashMap<>();
 
 
 
@@ -86,6 +87,8 @@ public class MetadataServer {
                 t.start();
                 System.out.print("Starting thread number" + i);
                 logger.info("Starting thread number" + i);
+                connections.put(i+1,s[i]);
+
             }
             // accept connections from clients
         }
@@ -166,6 +169,7 @@ public class MetadataServer {
                     List<String> replicasName = chunkToReplicas.get(lastChunk);
                     List<Integer> replicasToServers = new ArrayList<>();
                     List<String> replicas = new ArrayList<>();
+                    int clientId = msg.getSenderID();
 
 
 
@@ -182,14 +186,15 @@ public class MetadataServer {
                         replicasToServers.forEach(i-> System.out.println("replicas to servers" + i));
                         replicas.forEach(i-> System.out.println("replicas list:  "+i));
 
-                        Message message = new Message(1, MessageType.APPENDRESPONSE,
+                        Message message = new Message(0, MessageType.APPENDRESPONSE,
                                 replicaToServer.get(0),replicaToServer.get(1),replicaToServer.get(2),
                                 replicas.get(0),replicas.get(1),replicas.get(2),linuxFileName);
 
-
-                    Socket socket = null; //todo add socket value
+                    System.out.println("sending message to do the append to client id: "+clientId);
+                    Socket socket = connections.get(clientId);
                     ObjectOutputStream os = new ObjectOutputStream(socket.getOutputStream());
                     os.writeObject(message);
+
 
                 }
 
@@ -276,7 +281,7 @@ public class MetadataServer {
                                             if(version != tempVersion){
 
                                                 message = new Message(1, MessageType.UPDATEREPLICA, serverID, replica, linuxFileName);
-                                                Socket socket = null; //todo add socket value
+                                                Socket socket = connections.get(senderID);
                                                 ObjectOutputStream os = new ObjectOutputStream(socket.getOutputStream());
                                                 os.writeObject(message);
                                                 //send message that you need to update the replicas
@@ -335,15 +340,10 @@ public class MetadataServer {
     private void sendMessageToServer(int serverID, MessageType type, String chunkName, String linuxFileName ,
                                      String replicaName, Long size){
 
-        //todo use serverId
-        String addressOfServer = null; // ip
-        int port = 0;//port
-        Socket socket = null;
-
 
         try {
             System.out.println("sending message to server to create file ---- Create/Append/Read file step 1");
-            socket = new Socket(addressOfServer, port);
+            Socket socket = connections.get(serverID);;
             ObjectOutputStream os = new ObjectOutputStream(socket.getOutputStream());
 
             Message message = new Message();

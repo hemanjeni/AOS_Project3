@@ -170,7 +170,7 @@ public class Server {
 					s[i] = ss[i].accept();
 					oos[i] = new ObjectOutputStream(s[i].getOutputStream());
 					ois[i] = new ObjectInputStream(s[i].getInputStream());
-
+                
 					Thread t2 = new Thread(new ChannelHandler(s[i]));
 					t2.start();
 					System.out.print("Starting thread number" + i);
@@ -574,10 +574,15 @@ public class Server {
 								// adding entries in hashmaps for the newly created file
 								File [] allfiles2 = getFiles();
 								int totalfiles = allfiles2.length;
+								hmap2[totalfiles-1]= new HashMap();
 								hmap2[totalfiles-1].put(filename,totalfiles-1);// index
+								hmap6[totalfiles-1]= new HashMap();
 								hmap6[totalfiles-1].put(filename,filename.split("_")[0]);// actual file name
+								hmap3[totalfiles-1]= new HashMap();
 								hmap3[totalfiles-1].put(filename,0);// last offset
+								hmap4[totalfiles-1]= new HashMap();
 								hmap4[totalfiles-1].put(filename,Integer.parseInt(filename.split("_")[1]));// chunk index
+								hmap5[totalfiles-1]= new HashMap();
 								hmap5[totalfiles-1].put(filename,Integer.parseInt(filename.split("_")[2]));//version number
 							}
 							catch(Exception e)
@@ -681,29 +686,21 @@ public class Server {
 						}
 
 
-						if (messagetype.equals("COMMIT")) {
-							//this.senderID = senderUID;
-							//this.msgtype = Msgtype;
-							//this.fileName = chunkname;
-							//this.chunkoffset=chunkoffset;// no need of this, set to default value
-							//this.appendString= appendString;
-							String chunkname = object.getFileName();
-							int chunkoffset = object.getChunkoffset();
-							int requestor = object.getSenderID();
-							String stringtoappend = object.getAppendString();
-							try {
-								createFile.fileAppendString(chunkname,stringtoappend);
-							}
-							catch(Exception e)
-							{
-								System.out.println("Some problem appending file");
-							}
-
-
-							System.out.println("Committed file");
-							logger.info("Committed file");
-
-						}
+						/*
+						 * if (messagetype.equals("COMMIT")) { //this.senderID = senderUID;
+						 * //this.msgtype = Msgtype; //this.fileName = chunkname;
+						 * //this.chunkoffset=chunkoffset;// no need of this, set to default value
+						 * //this.appendString= appendString; String chunkname = object.getFileName();
+						 * int chunkoffset = object.getChunkoffset(); int requestor =
+						 * object.getSenderID(); String stringtoappend = object.getAppendString(); try {
+						 * createFile.fileAppendString(chunkname,stringtoappend); } catch(Exception e) {
+						 * System.out.println("Some problem appending file"); }
+						 * 
+						 * 
+						 * System.out.println("Committed file"); logger.info("Committed file");
+						 * 
+						 * }
+						 */
 
 						if (messagetype.equals("COMMITREQUEST"))
 						{
@@ -741,41 +738,38 @@ public class Server {
 
 						}
 
-						if (messagetype.equals("COMMITREQUEST"))
-						{
-							String chunkname = object.getFileName();
-							int chunkoffset = object.getChunkoffset();
-							int requestor = object.getSenderID();
-							int sizeofappend = object.getSizeofappend();
-							boolean checkresult = createFile.checkfileAppend(chunkname,sizeofappend);
-							boolean result = createFile.fileAppendString(chunkname,"NULL");
-
-							if(result==false)
-							{
-
-								System.out.println("Cannot commit write as file size is not enough, added null char");
-								logger.info("Cannot commit write as file size is not enough, added null char");
-
-								//public Message(int senderUID, MessageType Msgtype, String FileName) {
-								//this.senderID = senderUID;
-								//this.msgtype = Msgtype;
-								//this.fileName = FileName;
-								Message m = new Message(server_no,MessageType.ABORT,"ABORT");
-								oos[hmap.get(requestor)].writeObject(m);
-
-							}
-
-
-							else
-							{
-								Message m2 = new Message(server_no,MessageType.AGREED,"AGREE");
-								oos[hmap.get(requestor)].writeObject(m2);
-
-
-							}
-
-
-						}	
+						/*
+						 * if (messagetype.equals("COMMITREQUEST")) { String chunkname =
+						 * object.getFileName(); int chunkoffset = object.getChunkoffset(); int
+						 * requestor = object.getSenderID(); int sizeofappend =
+						 * object.getSizeofappend(); boolean checkresult =
+						 * createFile.checkfileAppend(chunkname,sizeofappend); boolean result =
+						 * createFile.fileAppendString(chunkname,"NULL");
+						 * 
+						 * if(result==false) {
+						 * 
+						 * System.out.
+						 * println("Cannot commit write as file size is not enough, added null char");
+						 * logger.info("Cannot commit write as file size is not enough, added null char"
+						 * );
+						 * 
+						 * //public Message(int senderUID, MessageType Msgtype, String FileName) {
+						 * //this.senderID = senderUID; //this.msgtype = Msgtype; //this.fileName =
+						 * FileName; Message m = new Message(server_no,MessageType.ABORT,"ABORT");
+						 * oos[hmap.get(requestor)].writeObject(m);
+						 * 
+						 * }
+						 * 
+						 * 
+						 * else { Message m2 = new Message(server_no,MessageType.AGREED,"AGREE");
+						 * oos[hmap.get(requestor)].writeObject(m2);
+						 * 
+						 * 
+						 * }
+						 * 
+						 * 
+						 * }
+						 */	
 					}
 
 

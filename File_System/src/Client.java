@@ -14,15 +14,16 @@ public class Client {
 	static Map<String, Integer> hmap_streams = new HashMap<>();// not required for now
 	static DataOutputStream dos[] = new DataOutputStream[6];
 	static DataInputStream dis[] = new DataInputStream[6];
-	static ObjectOutputStream oos[] = new ObjectOutputStream[6];
-	static ObjectInputStream ois[] = new ObjectInputStream[6];
-	static Socket s[] = new Socket[6];
+	static ObjectOutputStream oos[] = new ObjectOutputStream[7];
+	static ObjectInputStream ois[] = new ObjectInputStream[7];
+	 
 	static int client_no;
 	static Thread[] t;
 	public boolean exit=false;
 	Logger logger;
 
 	public Client(String args[]) throws IOException {
+		Socket s1,s2,s3,s4,s5,s6,s7;
 		ConfigProperties prop = new ConfigProperties();
 		client_no = Integer.parseInt(args[0]);
 		String metadataServeraddress = prop.getPropValues("metadataServeraddress");
@@ -63,17 +64,16 @@ public class Client {
 			// waiting for incoming socket connections from clients
 
 			//server no=1
-			if ((client_no) == 1) 
+			if ((client_no) == 6) 
 			{
 				//connect to metadata server
-				s[0] = new Socket(metadataServeraddress, metadataServeraddressforclient1);
-				dos[0] = new DataOutputStream(s[0].getOutputStream());
-				dis[0] = new DataInputStream(s[0].getInputStream());
-				oos[0] = new ObjectOutputStream(s[0].getOutputStream());
-				ois[0] = new ObjectInputStream(s[0].getInputStream());
-				Thread t = new Thread(new ChannelHandler(s[0]));
+				s1 = new Socket(metadataServeraddress, metadataServeraddressforclient1);
+				oos[0] = new ObjectOutputStream(s1.getOutputStream());
+				Thread t = new Thread(new ChannelHandler(s1));
 				//start thread for each server
 				t.start();
+				System.out.print("Started thread number 0");
+				logger.info("Started thread number 0");
 
 				// connecting to other servers
 				for (int i = 1; i <=5; i++) 
@@ -105,31 +105,29 @@ public class Client {
 						serveraddress= 	server5Address;
 						port = server5portforclient1;
 					}
-					s[i] = new Socket(serveraddress,port);
-
-					dos[i] = new DataOutputStream(s[i].getOutputStream());
-					dis[i] = new DataInputStream(s[i].getInputStream());
-					oos[i] = new ObjectOutputStream(s[i].getOutputStream());
-					ois[i] = new ObjectInputStream(s[i].getInputStream());
-					Thread t2 = new Thread(new ChannelHandler(s[i]));
+					s2 = new Socket(serveraddress,port);
+                    oos[i]= new ObjectOutputStream(s2.getOutputStream());
+					
+					
+					Thread t2 = new Thread(new ChannelHandler(s2));
 					t2.start();
-					System.out.print("Starting thread number" + i);
-					logger.info("Starting thread number" + i);
+					System.out.print("Started thread number" + i);
+					logger.info("Started thread number" + i);
 				}
 
 
 
 			}
-			//server no=2
-			if ((client_no) == 2) {
-				s[0] = new Socket(metadataServeraddress, metadataServeraddressforclient2);
-				dos[0] = new DataOutputStream(s[0].getOutputStream());
-				dis[0] = new DataInputStream(s[0].getInputStream());
-				oos[0] = new ObjectOutputStream(s[0].getOutputStream());
-				ois[0] = new ObjectInputStream(s[0].getInputStream());
-				Thread t = new Thread(new ChannelHandler(s[0]));
+			if ((client_no) == 7) 
+			{
+				//connect to metadata server
+				s1 = new Socket(metadataServeraddress, metadataServeraddressforclient2);
+				oos[0] = new ObjectOutputStream(s1.getOutputStream());
+				Thread t = new Thread(new ChannelHandler(s1));
 				//start thread for each server
 				t.start();
+				System.out.print("Started thread number 0");
+				logger.info("Started thread number 0");
 
 				// connecting to other servers
 				for (int i = 1; i <=5; i++) 
@@ -161,21 +159,19 @@ public class Client {
 						serveraddress= 	server5Address;
 						port = server5portforclient2;
 					}
-					s[i] = new Socket(serveraddress,port);
-
-					dos[i] = new DataOutputStream(s[i].getOutputStream());
-					dis[i] = new DataInputStream(s[i].getInputStream());
-					oos[i] = new ObjectOutputStream(s[i].getOutputStream());
-					ois[i] = new ObjectInputStream(s[i].getInputStream());
-					Thread t2 = new Thread(new ChannelHandler(s[i]));
+					s2 = new Socket(serveraddress,port);
+                    oos[i]= new ObjectOutputStream(s2.getOutputStream());
+					
+					
+					Thread t2 = new Thread(new ChannelHandler(s2));
 					t2.start();
-					System.out.print("Starting thread number" + i);
-					logger.info("Starting thread number" + i);
-
+					System.out.print("Started thread number" + i);
+					logger.info("Started thread number" + i);
 				}
 
+
+
 			}
-			//server no=3
 			logger.info("connected to metadata server and servers");
 		}catch (Exception e) {
 			e.printStackTrace();
@@ -265,12 +261,8 @@ public class Client {
 		public ChannelHandler(Socket s) {
 			try {
 				// initializing data i/p and o/p streams
-				datainput = new DataInputStream(s.getInputStream());
-				dataoutput = new DataOutputStream(s.getOutputStream());
-				oostream = new ObjectOutputStream(s.getOutputStream());
-				oistream = new ObjectInputStream(s.getInputStream());
-				System.out.print("after socket initialization" + datainput + " " + dataoutput + " " + s);
-				logger.info("After socket initialization" + datainput + " " + dataoutput + " " + s);
+				socket =s ;
+				
 			} catch (Exception ex) {
 				ex.printStackTrace();
 			}
@@ -279,10 +271,17 @@ public class Client {
 		public void run() {
 			try {
 				System.out.println("Inside run");
-				System.out.println("ois - hope they are not null!"+ois);
-				System.out.println("oos - hope they are not null!"+oos);
-				while(true)	{
-					if (datainput.available() > 0)
+				//oostream = new ObjectOutputStream(socket.getOutputStream());
+				oistream = new ObjectInputStream(socket.getInputStream());
+				System.out.print("after socket input  initialization" + socket);
+				logger.info("after socket input  initialization" + socket);
+				
+				String message = "";
+				logger.info("Inside run before while");
+				while(!message.equals("Over"))
+				{
+					//logger.info("inside while");
+					if (oistream.available() > 0)
 					{
 						logger.info("data available");
 

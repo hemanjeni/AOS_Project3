@@ -13,8 +13,10 @@ public class MetadataServer {
 
     static DataOutputStream dos[] = new DataOutputStream[7];
     static DataInputStream dis[] = new DataInputStream[7];
-    static ServerSocket ss[] = new ServerSocket[7];
-    static Socket s[] = new Socket[7];
+    static ObjectOutputStream oos[] = new ObjectOutputStream[7];
+    static ObjectInputStream ois[] = new ObjectInputStream[7];
+    ServerSocket ss1,ss2,ss3,ss4,ss5,ss6,ss7;
+    Socket s1,s2,s3,s4,s5,s6,s7;
     int file_server_no = 0;
     static Thread[] t;
     static int completioncounter = 0;
@@ -78,16 +80,15 @@ public class MetadataServer {
 
             for (int i = 0; i < 7; i++)
             {
-                ss[i] = new ServerSocket(metadataServeraddressforserver1 + i);
-                s[i] = ss[i].accept();
-                dos[i] = new DataOutputStream(s[i].getOutputStream());
-                dis[i] = new DataInputStream(s[i].getInputStream());
-
-                Thread t = new Thread(new ChannelHandler(s[i]));
+                ss1 = new ServerSocket(metadataServeraddressforserver1 + i);
+                s1= ss1.accept();
+               
+                oos[i] = new ObjectOutputStream(s1.getOutputStream());
+                Thread t = new Thread(new ChannelHandler(s1));
                 t.start();
                 System.out.print("Starting thread number" + i);
                 logger.info("Starting thread number" + i);
-                connections.put(i+1,s[i]);
+                connections.put(i+1,s1);
 
             }
             // accept connections from clients
@@ -305,17 +306,15 @@ public class MetadataServer {
 
 
     class ChannelHandler implements Runnable {
-        DataInputStream datainput;
-        DataOutputStream dataoutput;
+    	ObjectInputStream datainput;
+    	ObjectOutputStream dataoutput;
         Socket socket;
 
         public ChannelHandler(Socket s) {
             try {
                 // initializing data i/p and o/p streams
-                datainput = new DataInputStream(s.getInputStream());
-                dataoutput = new DataOutputStream(s.getOutputStream());
-                System.out.print("after socket initialization" + datainput + " " + dataoutput + " " + s);
-                logger.info("After socket initialization" + datainput + " " + dataoutput + " " + s);
+            	socket =s;
+                
             } catch (Exception ex) {
                 ex.printStackTrace();
             }
@@ -323,12 +322,22 @@ public class MetadataServer {
 
         public void run() {
             try {
-                System.out.println("Inside run");
-                while(true)
-                    if (datainput.available() > 0)
+            	 System.out.println("inside run");
+            	 String messagefromclient = "notover";
+              //  dataoutput = new ObjectOutputStream(socket.getOutputStream());
+                datainput = new ObjectInputStream(socket.getInputStream());
+                System.out.print("after socket initialization" + datainput + " " + dataoutput + " " + socket);
+                logger.info("After socket initialization" + datainput + " " + dataoutput + " " + socket);
+                while (messagefromclient != "over") 
+                {
+                    if (datainput!=null)
                     {
-                        logger.info("data available");
+                    	Message msg = (Message)datainput.readObject();
+                        Message message = (Message) msg;
+                        msgQueue.add(message);
+
                     }
+                }
             }
             catch (Exception ex) {
                 ex.printStackTrace();

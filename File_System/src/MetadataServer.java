@@ -148,7 +148,9 @@ public class MetadataServer {
 						    is ID of server
                             */
 						    if(serversConnected.get(i)) {
-                                String replicaName = chunkName +"_"+ i +"."+tempLinuxFileName[1];
+							    
+                               	String replicaName = chunkName +"_"+ "0"+ "_" + i +"."+tempLinuxFileName[1];
+				//String replicaName = chunkName +"_"+ i +"."+tempLinuxFileName[1];
                                 System.out.println("replica name for new created file"+replicaName);
                                 sendMessageToServer(i, MessageType.CREATE, chunkName, linuxFilename, replicaName,  (long) 0);
                             }

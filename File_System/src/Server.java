@@ -11,7 +11,7 @@ import java.util.logging.SimpleFormatter;
 
 public class Server {
 
-	static Map<Integer, Integer> hmap = new HashMap<>();
+	static Map<Integer, Integer> hmap = new HashMap<>();// mapping process to stream
 	static DataOutputStream dos[] = new DataOutputStream[7];
 	static DataInputStream dis[] = new DataInputStream[7];
 	static ObjectOutputStream oos[] = new ObjectOutputStream[7];
@@ -21,13 +21,15 @@ public class Server {
 	int server_no;
 	static Thread[] t;
 	static int filecount;
-	static HashMap<String, Integer>[] hmap2 = new HashMap[20];// filename
-	static HashMap<String, Integer>[] hmap3 = new HashMap[20];// offset
-	static HashMap<String, Integer>[] hmap4 = new HashMap[20];// chunkindex
-	static HashMap<String, Integer>[] hmap5 = new HashMap[20];
-	static HashMap<String, String>[] hmap6 = new HashMap[20];
+	static HashMap<String, Integer> hmap2 = new HashMap();//linux filename
+	static HashMap<String, Integer> hmap3 = new HashMap();// offset
+	static HashMap<String, Integer> hmap4 = new HashMap();// chunk index
+	static HashMap<String, Integer> hmap5 = new HashMap();//version
+	static HashMap<String, String> hmap6 = new HashMap();//actual filename
+	static HashMap<String, Boolean> hmap7 = new HashMap();//is full/or not
 	static StringBuilder commitchars;
-
+	static HashMap<String,Integer> hmapfileoffset = new HashMap();
+static boolean heartbeatflag=true;
 	Logger logger;
 	public static boolean exit = false;
 
@@ -426,7 +428,7 @@ public class Server {
 				oos[6] = new ObjectOutputStream(s7.getOutputStream());
 				Thread t7 = new Thread(new ChannelHandler(s7));
 				t7.start();
-				System.out.print("Starting thread number" + 5);
+				System.out.print("Starting thread number" + 6);
 				logger.info("Starting thread number" + 6);
 			}
 
@@ -445,6 +447,8 @@ public class Server {
 
 			int iteration = 5;
 			try {
+				if(heartbeatflag)
+				{
 				Thread.sleep(iteration * 1000);
 				File[] files = getFiles();
 
@@ -454,19 +458,21 @@ public class Server {
 					File file4 = files[i];
 					heartbeat hb = new heartbeat();
 					hb.setSenderID(server_no);// server_no
-					hb.setFileName(hmap6[i].get(file4.getName()));// linuxfile
+					hb.setFileName(hmap6.get(file4.getName()));// linuxfile
 					hb.setLinuxFileName(file4.getName());// chunkfilename
-					hb.setVersion_num(hmap5[i].get(file4.getName()));// version
-					hb.setLastoffset(hmap3[i].get(file4.getName()));// lastoffset
-					hb.setChunkindex(hmap4[i].get(file4.getName()));// chunkindex
+					hb.setVersion_num(hmap5.get(file4.getName()));// version
+					hb.setLastoffset(hmap3.get(file4.getName()));// lastoffset
+					hb.setChunkindex(hmap4.get(file4.getName()));// chunkindex
+					hb.setFull(hmap7.get(file4.getName()));
 					System.out.println(hb.getStringRepresentation());
 					hms[i] = hb;
-
+					System.out.println(server_no+","+hmap6.get(file4.getName())+","+file4.getName()+","+hmap3.get(file4.getName())+","+hmap4.get(file4.getName())+","+hmap5.get(file4.getName()));
 				}
 
 				heartbeatMessage hbm = new heartbeatMessage(hms);
 				hbm.setMsgtype(MessageType.HEARTBEAT);
 				oos[0].writeObject(hbm);
+				}
 			} catch (InterruptedException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -485,10 +491,10 @@ public class Server {
 		for (int i = 0; i < allfiles1.length; i++) {
 			File file2 = allfiles1[i];
 			String test = file2.getName().split("_")[0];
-			hmap2[i] = new HashMap();
+			
 			// hmap2.put(file.getName() , file.getName().split("_")[0]) ;
-			hmap2[i].put(file2.getName(), i);// index to search
-			filenames.append(file2.getName() + ":" + hmap2[i].get(file2.getName()) + "\n");
+			hmap2.put(file2.getName(), i);// index to search
+			filenames.append(file2.getName() + ":" + hmap2.get(file2.getName()) + "\n");
 
 		}
 		filenames.append("=======================================");
@@ -497,10 +503,10 @@ public class Server {
 		for (int i = 0; i < allfiles2.length; i++) {
 			File file2 = allfiles2[i];
 			String test = file2.getName().split("_")[0];
-			hmap6[i] = new HashMap();
+			
 			// hmap2.put(file.getName() , file.getName().split("_")[0]) ;
-			hmap6[i].put(file2.getName(), file2.getName().split("_")[0]);
-			filenames.append(file2.getName() + ":" + hmap6[i].get(file2.getName()) + "\n");
+			hmap6.put(file2.getName(), file2.getName().split("_")[0]);
+			filenames.append(file2.getName() + ":" + hmap6.get(file2.getName()) + "\n");
 
 		} // file-> linux file mapping
 		filenames.append("=======================================");
@@ -509,10 +515,10 @@ public class Server {
 		for (int i = 0; i < allfiles3.length; i++) {
 			File file2 = allfiles3[i];
 
-			hmap3[i] = new HashMap();
+			
 			// hmap2.put(file.getName() , file.getName().split("_")[0]) ;
-			hmap3[i].put(file2.getName(), 0);// offset
-			filenames.append(file2.getName() + ":" + hmap3[i].get(file2.getName()) + "\n");
+			hmap3.put(file2.getName(), 0);// offset
+			filenames.append(file2.getName() + ":" + hmap3.get(file2.getName()) + "\n");
 
 		}
 		filenames.append("=======================================");
@@ -521,10 +527,10 @@ public class Server {
 		for (int i = 0; i < allfiles4.length; i++) {
 			File file2 = allfiles4[i];
 
-			hmap4[i] = new HashMap();
+		
 			// hmap2.put(file.getName() , file.getName().split("_")[0]) ;
-			hmap4[i].put(file2.getName(), Integer.parseInt(file2.getName().split("_")[1]));// chunk index
-			filenames.append(file2.getName() + ":" + hmap4[i].get(file2.getName()) + "\n");
+			hmap4.put(file2.getName(), Integer.parseInt(file2.getName().split("_")[1]));// chunk index
+			filenames.append(file2.getName() + ":" + hmap4.get(file2.getName()) + "\n");
 		}
 		filenames.append("=======================================");
 		filenames.append("LINUX FILE NAMES" + ":" + "VERSION NUMBER" + "\n");
@@ -532,10 +538,22 @@ public class Server {
 		for (int i = 0; i < allfiles5.length; i++) {
 			File file2 = allfiles5[i];
 
-			hmap5[i] = new HashMap();
+			
 			// hmap2.put(file.getName() , file.getName().split("_")[0]) ;
-			hmap5[i].put(file2.getName(), Integer.parseInt(file2.getName().split("_")[2]));// version number
-			filenames.append(file2.getName() + ":" + hmap5[i].get(file2.getName()) + "\n");
+			hmap5.put(file2.getName(), Integer.parseInt(file2.getName().split("_")[2]));// version number
+			filenames.append(file2.getName() + ":" + hmap5.get(file2.getName()) + "\n");
+		}
+		filenames.append("=====================" + "\n");
+		filenames.append("=======================================");
+		filenames.append("LINUX FILE NAMES" + ":" + "FULL/NOT FULL" + "\n");
+		File[] allfiles6 = getFiles();
+		for (int i = 0; i < allfiles6.length; i++) {
+			File file2 = allfiles6[i];
+
+			
+			// hmap2.put(file.getName() , file.getName().split("_")[0]) ;
+			hmap7.put(file2.getName(), false);// version number
+			filenames.append(file2.getName() + ":" + hmap7.get(file2.getName()) + "\n");
 		}
 		filenames.append("=====================" + "\n");
 		String filestowrite = filenames.toString();
@@ -568,10 +586,14 @@ public class Server {
 
 	public static void writeToRandomAccessFile(String file, int position, String record) {
 		try {
-			RandomAccessFile fileStore = new RandomAccessFile(file, "rw");
+			RandomAccessFile fileStore = new RandomAccessFile("./files/"+file, "rw");
+			
 			// change code to seek!
 			fileStore.seek(position);
 			fileStore.writeUTF(record);
+		    int fileoffset = 	(int)fileStore.getFilePointer();
+			hmapfileoffset.put(file, fileoffset);
+			hmap3.put(file, fileoffset);
 			fileStore.close();
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -585,10 +607,12 @@ public class Server {
 		String record = null;
 		try {
 
-			RandomAccessFile fileStore = new RandomAccessFile(file, "r"); // moves file pointer to
+			RandomAccessFile fileStore = new RandomAccessFile("./files/"+file, "r"); // moves file pointer to
 			fileStore.seek(position); // reading String from RandomAccessFile
 			byte[] b = new byte[4096];
-			fileStore.read(b, position, (int) fileStore.length() - 1);
+			int fileoffsetpoint =hmapfileoffset.get(file);
+			
+			fileStore.read(b, position, fileoffsetpoint);//may be +1?
 
 			String text = new String(b, "UTF-8");
 			char[] chars = text.toCharArray();
@@ -600,7 +624,7 @@ public class Server {
 		return record;
 	}
 
-	public void buildFileHashmap() {
+	/*public void buildFileHashmap() {
 		StringBuilder filenames = new StringBuilder();
 		filenames.append("LINUX FILE NAMES" + ":" + "INDICES" + "\n");
 		File[] allfiles1 = getFiles();
@@ -674,7 +698,7 @@ public class Server {
 			e1.printStackTrace();
 		}
 
-	}
+	}*/
 
 	/* server number to be given as argument while running */
 	public static void main(String[] args) throws IOException {
@@ -719,11 +743,10 @@ public class Server {
 				objinput = new ObjectInputStream(socket.getInputStream());
 				System.out.print("after socket input  initialization" + socket);
 				logger.info("after socket input  initialization" + socket);
-				System.out.println("streams i/p and o/p " + objinput + " " + objoutput);
-				logger.info("streams i/p and o/p " + objinput + " " + objoutput);
+				
 				// continuously read data
 
-				while (messagefromclient != "over") {
+				while (!messagefromclient.equals("Over")) {
 
 					// check for data from socket
 					if (objinput.available() > 0) {
@@ -741,24 +764,27 @@ public class Server {
 						// CREATECOMMAND,// MS TO SERVER FOR NEW FILE CREATION to do
 
 						if (messagetype.equals("CREATECOMMAND")) {
+							//this.senderID = senderUID;
+							//this.msgtype = Msgtype;
+							//this.fileName = FileName;
 							String filename = object.getFileName();
 							try {
 								createFile.filecreate(filename);
 								// adding entries in hashmaps for the newly created file
 								File[] allfiles2 = getFiles();
 								int totalfiles = allfiles2.length;
-								hmap2[totalfiles - 1] = new HashMap();
-								hmap2[totalfiles - 1].put(filename, totalfiles - 1);// index
-								hmap6[totalfiles - 1] = new HashMap();
-								hmap6[totalfiles - 1].put(filename, filename.split("_")[0]);// actual file name
-								hmap3[totalfiles - 1] = new HashMap();
-								hmap3[totalfiles - 1].put(filename, 0);// last offset
-								hmap4[totalfiles - 1] = new HashMap();
-								hmap4[totalfiles - 1].put(filename, Integer.parseInt(filename.split("_")[1]));// chunk
-																												// index
-								hmap5[totalfiles - 1] = new HashMap();
-								hmap5[totalfiles - 1].put(filename, Integer.parseInt(filename.split("_")[2]));// version
-																												// number
+								
+								hmap2.put(filename, totalfiles - 1);// index
+								
+								hmap6.put(filename, filename.split("_")[0]);// actual file name
+								
+								hmap3.put(filename, 0);// last offset
+								hmapfileoffset.put(filename,0)	;	
+								hmap4.put(filename, Integer.parseInt(filename.split("_")[1]));// chunk index
+																										// index
+								
+								hmap5.put(filename, Integer.parseInt(filename.split("_")[2]));// version
+								hmap7.put(filename, false);																				// number
 							} catch (Exception e) {
 								System.out.println("there was some issue with file creation");
 							}
@@ -767,16 +793,38 @@ public class Server {
 
 						if (messagetype.equals("UPDATEREPLICA")) {
 
-							// this.senderID = senderUID;
-							// this.msgtype = Msgtype;
-							// this.fileName = FileName;
-							// this.server1= Integer.parseInt(server1);
-							// this.chunkname1= chunkname1;
-
+						//	this.senderID = senderUID;
+						//	this.msgtype = Msgtype;
+						//	this.fileName = FileName;
+						//	this.server1= server1;
+						//	this.chunkname1= chunkname1;
+                            String fileName = object.getFileName();
 							int server = object.getServer1();
 							String chunkname = object.getChunkname1();
 							// now issue a read request
+							File file = new File("./files/"+fileName);
+							// updating hmaps
+							hmap2.remove(fileName);// index
+							hmap6.remove(fileName);
+							hmap3.remove(fileName);
+							hmapfileoffset.remove(fileName)	;
+							hmap4.remove(fileName);
+							hmap5.remove(fileName);
+							hmap7.remove(fileName);
+							
+							
+							
+// deleting the current file
+							try(RandomAccessFile randomFile = new RandomAccessFile(file, "rw")){
 
+							   
+								
+								randomFile.close();
+								file.delete();
+							}
+							catch(Exception ex){
+							    ex.printStackTrace();
+							}
 							// this.senderID = senderUID;
 							// this.msgtype = Msgtype;
 							// .fileName = FileName;
@@ -787,18 +835,55 @@ public class Server {
 							System.out.println("read request sent to the server " + server);
 
 						}
+						if (messagetype.equals("HEARTBEAT")) {
+
+							   if(object.getFileName().equals("STOP"))
+							   {
+                                heartbeatflag=false;
+								
+								System.out.println("heartbeat received at the server to stop");
+							   }
+							   
+							   if(object.getFileName().equals("START"))
+							   {
+                                heartbeatflag=true;
+								
+								System.out.println("heartbeat received at the server to start");
+							   }
+
+							}
 						// server sent update message to another server after replica update
 						if (messagetype.equals("READFILERESPONSE")) {
-							// this.senderID = senderUID;
-							// this.msgtype = Msgtype;
-							// this.fileName = FileName;
+							//this.senderID = senderUID;
+							//this.msgtype = Msgtype;
+							//this.fileName = FileName;
+							//this.readcharacters = filescharacters;
 							String filename = object.getFileName();
 							String filecharacters = object.getReadcharacters();
 
 							String filenameatmylocation = filename.split("_")[0] + "_" + filename.split("_")[1] + "_"
 									+ filename.split("_")[2] + "_" + server_no;
+							
+							// DELETE THE FILE AND THEN CALL GETFILES() METHOD done
+							File[] allfiles2 = getFiles();
+							int totalfiles = allfiles2.length;
+							hmap2.put(filename, totalfiles - 1);// index //impact on already existing file but hmap2 where used? looping!
+							
+							hmap6.put(filename, filename.split("_")[0]);// actual file name
+							
+							hmap3.put(filename, 0);// last offset
+							hmapfileoffset.put(filename,0)	;	
+							hmap4.put(filename, Integer.parseInt(filename.split("_")[1]));// chunk index
+																									// index
+							
+							hmap5.put(filename, Integer.parseInt(filename.split("_")[2]));// version
+							hmap7.put(filename, false);	
+							
+							
 							try {
-								createFile.filewithString(filenameatmylocation, filecharacters);
+								int pointer=createFile.filewithString(filenameatmylocation, filecharacters);
+								hmap3.put(filename, pointer);// last offset
+								hmapfileoffset.put(filename,pointer)	;	
 								System.out.println("Downloaded file!");
 								logger.info("Downloaded file!");
 							} catch (Exception e) {
@@ -807,22 +892,22 @@ public class Server {
 						}
 						// client sent a release message
 						if (messagetype.equals("READFILE")) {
-							// this.senderID = senderUID;
-							// this.msgtype = Msgtype;
-							// this.fileName = FileName;
-							// Message m = new Message
+							//this.senderID = senderUID;
+							//this.msgtype = Msgtype;
+							//this.fileName = FileName;
+							//this.offset = offset;
 							// (client_no,MessageType.READFILE,chunkname,chunkoffset);
-							String chunkname = object.getChunkname();
-							int chunkoffset = object.getChunkoffset();
+							String fileName = object.getFileName();
+							int offset = object.getOffset();
 							int requestor = object.getSenderID();
 
-							String filecharacters = readFromRandomAccessFile(chunkname, chunkoffset);
+							String filecharacters = readFromRandomAccessFile(fileName, offset);
 							// this.senderID = senderUID;
 							// this.msgtype = Msgtype;
 							// this.fileName = FileName;
 							// this.readcharacters = filescharacters;
 
-							Message m = new Message(server_no, MessageType.READFILERESPONSE, chunkname, filecharacters);
+							Message m = new Message(server_no, MessageType.READFILERESPONSE, fileName, filecharacters);
 							System.out.println("Sending file");
 							logger.info("Sending file");
 							oos[hmap.get(requestor)].writeObject(m);
@@ -832,17 +917,53 @@ public class Server {
 						}
 
 						if (messagetype.equals("COMMIT")) {
-							// this.senderID = senderUID;
-							// this.msgtype = Msgtype;
-							// this.fileName = chunkname;
-							// this.chunkoffset=chunkoffset;// no need of this, set to default value
-							// this.appendString= appendString;
+							//this.senderID = senderUID;
+							//this.msgtype = Msgtype;
+							//this.fileName = chunkname;
+							//this.chunkoffset=chunkoffset;// no need of this, set to default value
+							//this.appendString= appendString;
 							String chunkname = object.getFileName();
 							int chunkoffset = object.getChunkoffset();
 							int requestor = object.getSenderID();
 							String stringtoappend = object.getAppendString();
 							try {
-								createFile.fileAppendString(chunkname, stringtoappend);
+								int pointer=createFile.fileAppendString(chunkname, stringtoappend,hmapfileoffset.get(chunkname));
+								
+								
+							//	hmap3.put(chunkname, pointer); last offset update with new names!
+							//	hmapfileoffset.put(chunkname,pointer)	
+								
+								
+							//	hmap5.put(chunkname, Integer.parseInt(chunkname.split("_")[2]+1));// version
+								// ADD CODE TO RENAME THE FILE! and update hmaps
+								int version = Integer.parseInt(chunkname.split("_")[2])+1;
+								String newname = chunkname.split("_")[0] + "_" + chunkname.split("_")[1] + "_"
+										+ Integer.toString(version) + "_" + server_no;
+								int createfilepointer=createFile.renameFile(chunkname,newname);
+								
+								hmap2.remove(chunkname);// index
+								hmap6.remove(chunkname);
+								hmap3.remove(chunkname);
+								hmapfileoffset.remove(chunkname)	;
+								hmap4.remove(chunkname);
+								hmap5.remove(chunkname);
+								hmap7.remove(chunkname);
+								
+								File[] allfiles2 = getFiles();
+								int totalfiles = allfiles2.length;
+								hmap2.put(newname, totalfiles - 1);// index //impact on already existing file but hmap2 where used? looping!
+								
+								hmap6.put(newname, newname.split("_")[0]);// actual file name
+								
+								hmap3.put(newname,createfilepointer );// last offset
+								hmapfileoffset.put(newname,createfilepointer)	;	
+								hmap4.put(newname, Integer.parseInt(newname.split("_")[1]));// chunk index
+																										// index
+								
+								hmap5.put(newname, Integer.parseInt(newname.split("_")[2]));// version
+								hmap7.put(newname, false);	
+								
+								
 							} catch (Exception e) {
 								System.out.println("Some problem appending file");
 							}
@@ -869,15 +990,23 @@ public class Server {
 						 */
 
 						if (messagetype.equals("COMMITREQUEST")) {
+							
+							//this.senderID = senderUID;
+							//this.msgtype = Msgtype;
+							//this.fileName = chunkname;
+							//this.chunkoffset=chunkoffset;  // no need of this, set to default value
+							//this.sizeofappend= sizeofappend;
 							String chunkname = object.getFileName();
 							int chunkoffset = object.getChunkoffset();
 							int requestor = object.getSenderID();
 							int sizeofappend = object.getSizeofappend();
-							boolean checkresult = createFile.checkfileAppend(chunkname, sizeofappend);
-							boolean result = createFile.fileAppendString(chunkname, "NULL");
+							boolean checkresult = createFile.checkfileAppend(chunkname, sizeofappend,hmapfileoffset.get(chunkname));
+							//boolean result = createFile.fileAppendString(chunkname, "NULL");
 
-							if (result == false) {
-
+							if (checkresult == false) {
+								createFile.fileAppendString(chunkname, "NULL",hmapfileoffset.get(chunkname));
+								//hmapfileoffset.put(chunkname, 4095);
+								hmap7.put(chunkname, true);
 								System.out.println("Cannot commit write as file size is not enough, added null char");
 								logger.info("Cannot commit write as file size is not enough, added null char");
 

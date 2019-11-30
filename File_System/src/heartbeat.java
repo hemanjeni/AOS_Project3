@@ -8,7 +8,14 @@ public class heartbeat implements Serializable{
 	    private int senderID;
 	    private int chunkindex;
 	    private int lastoffset;
-	    public int getLastoffset() {
+	    private boolean full;
+	    public boolean isFull() {
+			return full;
+		}
+		public void setFull(boolean full) {
+			this.full = full;
+		}
+		public int getLastoffset() {
 			return lastoffset;
 		}
 		public void setLastoffset(int lastoffset) {

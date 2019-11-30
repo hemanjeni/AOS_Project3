@@ -336,7 +336,8 @@ public class MetadataServer {
                     {
                     	Message msg = (Message)datainput.readObject();
                         Message message = (Message) msg;
-                        msgQueue.add(message);
+                        System.out.println("message received at metadataServer"+message);
+			msgQueue.add(message);
 
                     }
                 }

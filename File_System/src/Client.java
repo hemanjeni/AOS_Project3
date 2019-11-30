@@ -180,7 +180,7 @@ public class Client {
 		String message2 = "";
 		InputStreamReader input = new InputStreamReader(System.in);
 		BufferedReader reader2 = new BufferedReader(input);
-		System.out.println("Please enter operations  -1. CREATE 2. READ 3.APPEND  4.EXIT");
+		System.out.println("Please enter operations  -1. CREATE 2. READ 3.APPEND 4.HBSERVER-STOP 5.HBSERVER-RESUME 6.EXIT");
 
 		try {
 			logger.info("Listening to console");
@@ -235,8 +235,33 @@ public class Client {
 					System.out.println("create command sent to MS");
 					logger.info(	"create command sent to MS");
 				}
-
+				
 				if (message2.equals("4")) {
+					logger.info("give server_no");
+					System.out.println("give server_no");
+					
+					String server = reader2.readLine();
+					//					pw5.write("READ" + "," + node_no + "," + fileName);
+                     int serverno =Integer.parseInt(server);
+					Message m = new Message(client_no,MessageType.HEARTBEAT,"start");
+					oos[serverno].writeObject(m);
+					System.out.println(" command sent to server to stop");
+					logger.info(	"command sent to server to stop");
+				}
+				if (message2.equals("5")) {
+					logger.info("give server_no");
+					System.out.println("give server_no");
+					
+					String server = reader2.readLine();
+					//					pw5.write("READ" + "," + node_no + "," + fileName);
+                     int serverno =Integer.parseInt(server);
+					Message m = new Message(client_no,MessageType.HEARTBEAT,"stop");
+					oos[serverno].writeObject(m);
+					System.out.println(" command sent to server to stop");
+					logger.info(	"command sent to server to stop");
+				}
+
+				if (message2.equals("6")) {
 					exit = true;
 					logger.info("bye to everyone!");
 					System.out.println("bye to everyone!");
@@ -289,7 +314,12 @@ public class Client {
 						String messagetype =  object.getMsgtype().toString();
 						if(messagetype.equals("READRESPONSE"))
 						{
-
+							//this.senderID = senderUID;
+							//this.msgtype = Msgtype;
+							//this.fileName = FileName;
+							//this.server= server;
+							//this.chunkname = chunkNameatServer;
+							//this.chunkoffset = chunkoffset;
 
 							String filename = object.getFileName();
 							int server = object.getServer();

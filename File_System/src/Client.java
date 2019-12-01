@@ -16,7 +16,8 @@ public class Client {
 	static DataInputStream dis[] = new DataInputStream[6];
 	static ObjectOutputStream oos[] = new ObjectOutputStream[7];
 	static ObjectInputStream ois[] = new ObjectInputStream[7];
-
+    static Map<Integer, Integer> hmap_2phase = new HashMap<>();
+    static int responsetobeReceivedcount=0;
 	 
 	static int client_no;
 	static Thread[] t;
@@ -346,6 +347,31 @@ public class Client {
 
 
 						}
+						if(messagetype.equals("AGREED"))
+						{
+
+                              
+							int server = object.getSenderID();
+							responsetobeReceivedcount--;
+							hmap_2phase.put(server, 1);
+							logger.info("server"+server+"agreed");
+							System.out.println("server"+server+"agreed");
+
+
+						}
+						if(messagetype.equals("ABORT"))
+						{
+
+                              
+                           int server = object.getSenderID();
+                           responsetobeReceivedcount--;
+							hmap_2phase.put(server, 0);
+							logger.info("server"+server+"aborted");
+							System.out.println("server"+server+"aborted");
+
+
+						}
+						
 						if(messagetype.equals("APPENDRESPONSE"))
 						{
 							//this.senderID = senderUID;
@@ -358,27 +384,153 @@ public class Client {
 							// this.chunkname2= chunkname2;
 							//this.chunkname3= chunkname3; 
 							// this.chunkoffset = chunkoffset; 
+							
+
+							//boolean result =	 initiate2Phase.initiate(object,ois,oos,client_no);
+							//==================================================
 							String filename = object.getFileName();
+							int server1 = object.getServer1();
+							int server2 = object.getServer2();
+							int server3 = object.getServer3();
+							String chunkname1 = object.getChunkname1();
+							String chunkname2 = object.getChunkname2();
+							String chunkname3 = object.getChunkname3();
+							int chunkoffset = object.getChunkoffset();
+							 String result="";
 
-							boolean result =	 initiate2Phase.initiate(object,ois,oos,client_no);
-							if(result==true)
-							{
-								logger.info("2 phase commit implemented successfully");
-								System.out.println("2 phase commit implemented successfully");	
-								Message m = new Message(client_no,MessageType.APPENDCOMPLETE,filename) ;
-								oos[0].writeObject(m);
+							boolean exit =false;
+							
 
-								logger.info("sent append complete to metadataserver");
-								System.out.println("sent append complete to metadataserver");	
+							// in 2 phase commit, the coordinator(client) first issues commit request to cohorts
+							//then all the cohorts send agreed message, the coordinatorand cohorts are in wait in the meantime
+							//once coordinator receives all agreed messages, it sends commit message after cohorts receive commit message , they commit
+
+							
+								System.out.println("====TWO PHASE INITIATION===");
+								//this.senderID = senderUID;
+								//this.msgtype = Msgtype;
+								//this.fileName = chunkname;
+								//this.chunkoffset=chunkoffset;  // no need of this, set to default value
+								//this.sizeofappend= sizeofappend;
+								// write code to generate a string <=1024
+								Random m = new Random();
+								int size = m.nextInt(1024);
+								int leftLimit = 97; // letter 'a'
+								int rightLimit = 122;
+								StringBuilder buffer = new StringBuilder(size);
+								for (int i = 0; i < size; i++) {
+									int randomLimitedInt = leftLimit + (int) 
+											(m.nextFloat() * (rightLimit - leftLimit + 1));
+									buffer.append((char) randomLimitedInt);
+								}
+								System.out.println(buffer);
+								result = buffer.toString();
+								int lengthofresult = result.length();
+								// create message objects and write to streams
+							try {
+								Message m1 = new Message(client_no,MessageType.COMMITREQUEST,chunkname1,chunkoffset,lengthofresult);
+								hmap_2phase.put(server1,0);
+								
+								oos[server1].writeObject(m1);
+								Message m2 = new Message(client_no,MessageType.COMMITREQUEST,chunkname2,chunkoffset,lengthofresult);
+								
+								hmap_2phase.put(server2,0);
+								oos[server2].writeObject(m2);
+								if(server3!=0)
+								{
+								Message m3 = new Message(client_no,MessageType.COMMITREQUEST,chunkname3,chunkoffset,lengthofresult);
+								
+								hmap_2phase.put(server3,0);
+								oos[server3].writeObject(m3);
+								responsetobeReceivedcount=3;
+								}
+								else
+								{
+								responsetobeReceivedcount=2;
+								}
+
+
+								System.out.println("Sent Commmit requests to servers");
+							} catch (UnknownHostException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							} catch (IOException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
 							}
-							else
-							{
-								logger.info("2 phase commit cannot be completed");
-								System.out.println("2 phase commit cannot be completed");
-								Message m = new Message(client_no,MessageType.APPENDNOTCOMPLETE,filename) ;
-								logger.info("sent append incomplete to metadataserver");
-								System.out.println("sent append incomplete to metadataserver");	
-							}
+							//waiting for sometime
+									try {
+										System.out.println("Sleeping");
+										Thread.sleep(3000);
+									} catch (Exception e) {
+										System.out.println(e);
+									}
+									System.out.println("Waiting for responses");
+									
+									while(!exit)
+									{
+										if(responsetobeReceivedcount==0)
+										{
+
+										exit=true;
+										// checking the contents of the hash map
+										int abortflag=0;//checking if any server sent abort
+										Iterator it = hmap_2phase.entrySet().iterator();
+									    while (it.hasNext()) {
+									        Map.Entry pair = (Map.Entry)it.next();
+									        System.out.println("hashmap containing results contents:<server>:<response>"+pair.getKey() + " = " + pair.getValue());
+									        
+									       if(Integer.parseInt(pair.getValue().toString())==0)
+									       {
+									    	   abortflag=1;
+									       }
+									      
+									            }
+									    hmap_2phase.clear();
+									    
+										if(abortflag==0)
+										{
+											try {
+												
+											Message m1 = new Message(client_no,MessageType.COMMIT,chunkname1,chunkoffset,result);
+											oos[server1].writeObject(m1);
+											Message m2 = new Message(client_no,MessageType.COMMIT,chunkname2,chunkoffset,result);
+											oos[server2].writeObject(m2);
+											if(server3!=0)
+											{
+											Message m3 = new Message(client_no,MessageType.COMMIT,chunkname3,chunkoffset,result);
+											oos[server3].writeObject(m3);
+											}
+											System.out.println("Successfully committed to all replicas");
+											logger.info("2 phase commit implemented successfully");
+											System.out.println("2 phase commit implemented successfully");	
+											Message mserver = new Message(client_no,MessageType.APPENDCOMPLETE,filename) ;
+											oos[0].writeObject(mserver);
+
+											logger.info("sent append complete to metadataserver");
+											System.out.println("sent append complete to metadataserver");	
+											}
+											catch (Exception e) {
+												// TODO Auto-generated catch block
+												e.printStackTrace();
+											}
+											
+								          }	
+										
+										else
+										{
+											
+												logger.info("2 phase commit cannot be completed");
+												System.out.println("2 phase commit cannot be completed");
+												Message mserver = new Message(client_no,MessageType.APPENDNOTCOMPLETE,filename) ;
+												oos[0].writeObject(mserver);
+												logger.info("sent append incomplete to metadataserver");
+											
+										}
+									}
+						       }
+							//=====================================================
+							
 
 
 						}

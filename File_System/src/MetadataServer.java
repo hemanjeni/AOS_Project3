@@ -7,12 +7,13 @@ import java.io.*;
         import java.util.logging.Logger;
         import java.util.logging.SimpleFormatter;
         import java.util.concurrent.BlockingQueue;
-        import java.util.concurrent.PriorityBlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.PriorityBlockingQueue;
 
 public class MetadataServer {
 
-    static DataOutputStream dos[] = new DataOutputStream[7];
-    static DataInputStream dis[] = new DataInputStream[7];
+    static ObjectOutputStream dos[] = new ObjectOutputStream[7];
+    static ObjectInputStream dis[] = new ObjectInputStream[7];
     static ServerSocket ss[] = new ServerSocket[7];
     static Socket s[] = new Socket[7];
     int file_server_no = 0;
@@ -41,7 +42,7 @@ public class MetadataServer {
 
 
     public MetadataServer(String args[]) throws IOException {
-        msgQueue = new PriorityBlockingQueue<Object>();
+        msgQueue = new LinkedBlockingQueue<Object>();
         linuxfileToChunks = new HashMap<>();
         replicaToServer = new HashMap<>();
         chunkVersion = new HashMap<>();
@@ -50,12 +51,17 @@ public class MetadataServer {
         replicaVersion = new HashMap<>();
         replicaSize = new HashMap<>();
         replicaOffset = new HashMap<>();
-
+        ChannelHandler ch;
         serversConnected = new HashMap<>();
         lastHeartbeat = new HashMap<>();
         chunkSize = new HashMap<>();
         fileNameMapping = new HashMap<>();
         connections = new HashMap<>();
+        serversConnected.put(1,true);
+        serversConnected.put(2,true);
+        serversConnected.put(3,true);
+        serversConnected.put(4,true);
+        serversConnected.put(5,true);
 
 
 
@@ -81,10 +87,12 @@ public class MetadataServer {
             {
                 ss[i] = new ServerSocket(metadataServeraddressforserver1 + i);
                 s[i] = ss[i].accept();
-                dos[i] = new DataOutputStream(s[i].getOutputStream());
-                dis[i] = new DataInputStream(s[i].getInputStream());
-
-                Thread t = new Thread(new ChannelHandler(s[i]));
+                
+                
+                ch = new ChannelHandler(s[i]);
+                dos[i] = ch.getOutputStreamObject();
+                dis[i] = ch.getInputStreamObject();
+                Thread t = new Thread(ch);
                 t.start();
                 System.out.print("Starting thread number" + i);
                 logger.info("Starting thread number" + i);
@@ -101,6 +109,8 @@ public class MetadataServer {
 
         //reading from queue for new messages
         while(true){
+        	
+        	
 
             for(int serverID : serversConnected.keySet()){
                 if (lastHeartbeat.containsKey(serverID) &&
@@ -125,48 +135,92 @@ public class MetadataServer {
 
                         //todo when mserver receives replica size (offset) store the same size to chunk also
                         heartbeatMessage heartbeatmsg = (heartbeatMessage) msg;
-                        System.out.println("heartBeat message received from  server id :"+ msg.getSenderID());
+                        //System.out.println("heartBeat message received from  server id :"+ msg.getSenderID());
                         int serverID = msg.getSenderID();
                         lastHeartbeat.put(serverID,System.currentTimeMillis() / 1000);
                         //todo data update as per sending
                         String linuxFileName;
-                        String fileName; //not required
+                        String fileName, chunkName1; //not required
                         int senderID, chunkIndex, versionNo;
                         long offset;
 
                         heartbeat[] heartbeats = heartbeatmsg.getHeartBeats();
                         for(int i=0;i<heartbeats.length;i++){
-                            fileName = heartbeats[i].getFileName();
-                            linuxFileName = heartbeats[i].getLinuxFileName();
-                            senderID= heartbeats[i].getSenderID();
-
+                            //abc.txt
+                        	fileName = heartbeats[i].getFileName()+".txt";
+                            //abc_1_0_2.txt
+                        	linuxFileName = heartbeats[i].getLinuxFileName();
+                        	//2
+                        	senderID= heartbeats[i].getSenderID()+1;
+                        	
+                        	String[] chunkSplit= linuxFileName.split("_");
+                        	
+                        	//abc_1
+                        	chunkName1 = chunkSplit[0]+"_"+chunkSplit[1];
+                            
+                            
                             //todo check how server is naming chunk index
-
+                        	//1
                             chunkIndex = heartbeats[i].getChunkindex();
                             offset = heartbeats[i].getOffset();
+                            //0
                             versionNo = heartbeats[i].getVersion_num();
-                            System.out.println("linux file is under processing now"+linuxFileName);
+                           
+                            
 
-                            List<String> chunks = linuxfileToChunks.get(linuxFileName);
-                            String chunkName = chunks.get(chunkIndex);
+                            // check the code here
+                            
+                            linuxfileToChunks.putIfAbsent(fileName, new ArrayList<String>());
+                            if(!linuxfileToChunks.get(fileName).contains(chunkName1)) {
+                            	System.out.println(fileName+"linux file is under processing now --- "+linuxFileName+" ,senderID: "+
+                                        senderID+", chunkIndex: "+chunkIndex+" ,versionNo: "+versionNo + "chunkName : "+chunkName1);
+                            	
+                            	linuxfileToChunks.get(fileName).add(chunkName1);
+                            }
+                            //linuxfileToChunks.put(fileName, linuxfileToChunks.get(fileName).add(chunkName));
+                            
+                            List<String> chunks = linuxfileToChunks.get(fileName);
+                            System.out.println("chunk");
+                            
+                            String chunkName = chunks.get(chunkIndex-1);
+                            chunkToReplicas.putIfAbsent(chunkName, new ArrayList<String>());
+                            if(!chunkToReplicas.get(chunkName).contains(fileName)) {
+                            	chunkToReplicas.get(chunkName).add(fileName);
+                            	
+                            	System.out.println(fileName+"linux file is under processing now --- "+linuxFileName+" ,senderID: "+
+                                        senderID+", chunkIndex: "+chunkIndex+" ,versionNo: "+versionNo + "chunkName : "
+                            			+chunkName1 +" and "+chunkName+" replica Name"+ fileName +" offset "+offset);
+                            	
+                            	
+                            }
+                            
+                            
                             List<String> replicas = chunkToReplicas.get(chunkName);
                             int tempVersion = 0;
                             int version=0;
                             Message message;
 
                             for(String replica : replicas){
-                                version = replicaVersion.get(replica);
+                            	
+                            	replicaVersion.putIfAbsent(replica, 0);
+                            	
+                            	version = replicaVersion.get(replica);
                                 if(version > tempVersion){
                                     tempVersion = version;
                                 }
-
-                                System.out.println("replica is under processing now");
+                                
+                                System.out.println(fileName+"linux file is under processing now --- 2"+linuxFileName+" ,senderID: "+
+                                        senderID+", chunkIndex: "+chunkIndex+" ,versionNo: "+versionNo + "chunkName : "
+                            			+chunkName1 +" and "+chunkName+" replica Name"+ fileName +" offset "+offset);
+                            	
+                                
+                                replicaToServer.putIfAbsent(replica, senderID);
+                                
                                 if(senderID == replicaToServer.get(replica)){
-
                                     //when servers was dead and got connected again
-                                    if(!serversConnected.get(replica)){
+                                	
+                                    if(!serversConnected.get(senderID)){
                                         if(version != tempVersion){
-
                                             message = new Message(1, MessageType.UPDATEREPLICA, serverID, replica, linuxFileName);
                                             Socket socket = connections.get(senderID);
                                             ObjectOutputStream os = new ObjectOutputStream(socket.getOutputStream());
@@ -189,6 +243,7 @@ public class MetadataServer {
                 }
                 else if(msgObj instanceof Message) {
                     Message msg = (Message) msgObj;
+                    msgQueue.remove();
                     System.out.println("message received at metadataServer"+msg);
 
                     if(msg.getMsgtype() == MessageType.CREATE){
@@ -213,18 +268,22 @@ public class MetadataServer {
                             chunkName = tempLinuxFileName[0]+"_"+(tempVal++)+"."+tempLinuxFileName[1];
                             fileNameMapping.put(linuxFilename,tempVal);
                             System.out.println("chunk name for new created file"+chunkName);
+                            linuxfileToChunks.put(linuxFilename,new ArrayList<String>());
                         }
 
                         //below code will be used for future purpose.
                         linuxfileToChunks.get(linuxFilename).add(chunkName);
+                        
+                        
+                        
                         for(int i : serversSelected) {
 						    /*it will call the function to send message to create chunk to the selected server where i
 						    is ID of server
                             */
                             if(serversConnected.get(i)) {
-                                String replicaName = chunkName +"_"+ "0"+ "_" + i +"."+tempLinuxFileName[1];
+                                String replicaName = chunkName.split("\\.")[0] +"_"+ "0"+ "_" + i +"."+tempLinuxFileName[1];
                                 System.out.println("replica name for new created file"+replicaName);
-                                sendMessageToServer(i, MessageType.CREATE, chunkName, linuxFilename, replicaName,  (long) 0);
+                                sendMessageToServer(i-1, MessageType.CREATECOMMAND, chunkName, linuxFilename, replicaName,  (long) 0);
                             }
                             else{
                                 System.out.println("server is dead, ID:" + i);
@@ -339,6 +398,9 @@ public class MetadataServer {
                 datainput = new ObjectInputStream(s.getInputStream());
                 dataoutput = new ObjectOutputStream(s.getOutputStream());
                 dataoutput.flush();
+                dataoutput.reset();
+                
+        
 
                 System.out.print("after socket initialization" + datainput + " " + dataoutput + " " + s);
                 logger.info("After socket initialization" + datainput + " " + dataoutput + " " + s);
@@ -347,18 +409,32 @@ public class MetadataServer {
             }
         }
 
+        public ObjectOutputStream getOutputStreamObject() {
+        	return dataoutput;
+        }
+        
+        public ObjectInputStream getInputStreamObject() {
+        	return datainput;
+        }
+        
         public void run() {
             try {
+            	Thread.sleep(3000);
 
-                while(true)
-                    if (datainput.available() > 0)
+                while(true) {
+                	
+                    if (true)
                     {
+                    	//System.out.println("message received --1 ");
                         Object msg = datainput.readObject();
+                        //System.out.println("message received --2"+msg);
+                        dataoutput.reset();
 
                         msgQueue.add(msg);
 
 
                     }
+                }
             }
             catch (Exception ex) {
                 ex.printStackTrace();
@@ -375,8 +451,9 @@ public class MetadataServer {
 
         try {
             System.out.println("sending message to server to create file ---- Create/Append/Read file step 1");
-            Socket socket = connections.get(serverID);;
-            ObjectOutputStream os = new ObjectOutputStream(socket.getOutputStream());
+            Socket socket = connections.get(serverID);
+            //ObjectOutputStream os = new ObjectOutputStream(socket.getOutputStream());
+            
 
             Message message = new Message();
             message.setFileName(linuxFileName);
@@ -384,7 +461,13 @@ public class MetadataServer {
             message.setMsgtype(type);
             message.setSenderID(1);
             message.setServer(serverID);
-            os.writeObject(message);
+            dos[serverID].writeObject(message);
+            dos[serverID].reset();
+            
+            //os.close();
+            //socket.close();
+            
+            //dos[serverID].writeObject(message);
 
                 if(type == MessageType.CREATE){
                     linuxfileToChunks.putIfAbsent(linuxFileName, new ArrayList<>());
@@ -393,7 +476,7 @@ public class MetadataServer {
 
             System.out.println("sending message to server to create file ---- Create/Append/Read file step 2");
 
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
 

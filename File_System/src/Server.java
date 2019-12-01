@@ -157,6 +157,7 @@ static boolean heartbeatflag=true;
 					if (i == 4) {
 						serverport = server1portforserver5;
 					}
+					System.out.println("----- "+ serverport);
 
 					ss2 = new ServerSocket(serverport);
 					s2 = ss2.accept();
@@ -447,26 +448,37 @@ static boolean heartbeatflag=true;
 
 			int iteration = 5;
 			try {
-				if(heartbeatflag)
+				if(true)
 				{
+					
 				Thread.sleep(iteration * 1000);
 				File[] files = getFiles();
 
 				heartbeat[] hms = new heartbeat[files.length];
-
 				for (int i = 0; i < files.length; i++) {
 					File file4 = files[i];
 					heartbeat hb = new heartbeat();
 					hb.setSenderID(server_no);// server_no
 					hb.setFileName(hmap6.get(file4.getName()));// linuxfile
 					hb.setLinuxFileName(file4.getName());// chunkfilename
+					// change 1997
+					hmap5.putIfAbsent(file4.getName(),0);
 					hb.setVersion_num(hmap5.get(file4.getName()));// version
+					// change 1997
+					hmap3.putIfAbsent(file4.getName(),0);
 					hb.setLastoffset(hmap3.get(file4.getName()));// lastoffset
-					hb.setChunkindex(hmap4.get(file4.getName()));// chunkindex
+					// change 1997
+					hmap4.putIfAbsent(file4.getName(),1);
+					hb.setChunkindex(hmap4.get(file4.getName()));// chunkindex 
+					// change 1997
+					hmap7.putIfAbsent(file4.getName(), false);
 					hb.setFull(hmap7.get(file4.getName()));
+					
+					// change 1
 					System.out.println(hb.getStringRepresentation());
 					hms[i] = hb;
-					System.out.println(server_no+","+hmap6.get(file4.getName())+","+file4.getName()+","+hmap3.get(file4.getName())+","+hmap4.get(file4.getName())+","+hmap5.get(file4.getName()));
+					// change 2
+					//System.out.println(server_no+","+hmap6.get(file4.getName())+","+file4.getName()+","+hmap3.get(file4.getName())+","+hmap4.get(file4.getName())+","+hmap5.get(file4.getName()));
 				}
 
 				heartbeatMessage hbm = new heartbeatMessage(hms);
@@ -477,7 +489,8 @@ static boolean heartbeatflag=true;
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			System.out.println("i should appear every 5 secs");
+			//change 3
+			//System.out.println("i should appear every 5 secs");
 
 		}
 
@@ -572,12 +585,15 @@ static boolean heartbeatflag=true;
 
 	}
 
+	
 	public static File[] getFiles() {
-		File dir = new File(".\\files\\");
-		File[] files = dir.listFiles((d, name) -> name.endsWith(".txt"));
+		File dir = new File("./files/");
 
+		File[] files = dir.listFiles((d, name) -> name.endsWith(".txt"));
+		//System.out.println("files -- - -"+files.length);
 		for (File txtfile : files) {
-			System.out.println(txtfile);
+			//change
+			//System.out.println(txtfile);
 			filecount++;
 
 		}
@@ -737,7 +753,6 @@ static boolean heartbeatflag=true;
 				String message = "";
 				logger.info("Inside run before while");
 				String messagefromclient = "notover";
-				System.out.println("inside run()");
 				logger.info("Inside run()");
 				//objoutput = new ObjectOutputStream(socket.getOutputStream());
 				objinput = new ObjectInputStream(socket.getInputStream());
@@ -749,7 +764,7 @@ static boolean heartbeatflag=true;
 				while (!messagefromclient.equals("Over")) {
 
 					// check for data from socket
-					if (objinput.available() > 0) {
+					
 
 						Message object = (Message) objinput.readObject();
 						String messagetype = object.getMsgtype().toString();
@@ -767,10 +782,13 @@ static boolean heartbeatflag=true;
 							//this.senderID = senderUID;
 							//this.msgtype = Msgtype;
 							//this.fileName = FileName;
-							String filename = object.getFileName();
+							
+							//change
+							String filename = object.getChunkname();
 							try {
 								createFile.filecreate(filename);
 								// adding entries in hashmaps for the newly created file
+								
 								File[] allfiles2 = getFiles();
 								int totalfiles = allfiles2.length;
 								
@@ -786,7 +804,7 @@ static boolean heartbeatflag=true;
 								hmap5.put(filename, Integer.parseInt(filename.split("_")[2]));// version
 								hmap7.put(filename, false);																				// number
 							} catch (Exception e) {
-								System.out.println("there was some issue with file creation");
+								System.out.println("there was some issue with file creation"+e.getMessage());
 							}
 
 						}
@@ -1059,7 +1077,7 @@ static boolean heartbeatflag=true;
 						 * 
 						 * }
 						 */
-					}
+					
 
 				}
 				System.out.println("Reached end of while");

@@ -11,6 +11,8 @@ public class createFile {
 		double bytes = 0;
 		try {
 			f = new RandomAccessFile("./files/"+filename, "rw");
+			System.out.println("file creation  "+filename+" ------ ");
+			
 			f.setLength(4096*1024);//4096*1024
 		//	long l = f.getFilePointer();
 		//	System.out.println("current offset"+l);

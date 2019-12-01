@@ -16,6 +16,7 @@ public class Client {
 	static DataInputStream dis[] = new DataInputStream[6];
 	static ObjectOutputStream oos[] = new ObjectOutputStream[7];
 	static ObjectInputStream ois[] = new ObjectInputStream[7];
+
 	 
 	static int client_no;
 	static Thread[] t;

@@ -245,7 +245,7 @@ public class Client {
 					String server = reader2.readLine();
 					//					pw5.write("READ" + "," + node_no + "," + fileName);
                      int serverno =Integer.parseInt(server);
-					Message m = new Message(client_no,MessageType.HEARTBEAT,"start");
+					Message m = new Message(client_no,MessageType.HEARTBEAT,"START");
 					oos[serverno].writeObject(m);
 					System.out.println(" command sent to server to stop");
 					logger.info(	"command sent to server to stop");
@@ -257,7 +257,7 @@ public class Client {
 					String server = reader2.readLine();
 					//					pw5.write("READ" + "," + node_no + "," + fileName);
                      int serverno =Integer.parseInt(server);
-					Message m = new Message(client_no,MessageType.HEARTBEAT,"stop");
+					Message m = new Message(client_no,MessageType.HEARTBEAT,"STOP");
 					oos[serverno].writeObject(m);
 					System.out.println(" command sent to server to stop");
 					logger.info(	"command sent to server to stop");

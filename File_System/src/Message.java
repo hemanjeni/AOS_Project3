@@ -66,6 +66,7 @@ public class Message  implements Serializable{
 	public String getReadcharacters() {
 		return readcharacters;
 	}
+	
 
 	public void setReadcharacters(String readcharacters) {
 		this.readcharacters = readcharacters;

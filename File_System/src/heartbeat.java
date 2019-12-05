@@ -12,9 +12,14 @@ public class heartbeat implements Serializable{
 	    public boolean isFull() {
 			return full;
 		}
+	    
 		public void setFull(boolean full) {
 			this.full = full;
 		}
+		public boolean getFull(){
+			return this.full;
+		}
+		
 		public int getLastoffset() {
 			return lastoffset;
 		}

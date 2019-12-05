@@ -13,7 +13,7 @@ public class createFile {
 			f = new RandomAccessFile("./files/"+filename, "rw");
 			System.out.println("file creation  "+filename+" ------ ");
 			
-			f.setLength(4096*1024);//4096*1024
+			f.setLength(4096);//4096*1024
 		//	long l = f.getFilePointer();
 		//	System.out.println("current offset"+l);
 		    bytes = f.length();
@@ -34,7 +34,7 @@ public class createFile {
 		int pointer = 0;
 		try {
 			f = new RandomAccessFile("./files/"+filename, "rw");
-			f.setLength(4096*1024);//4096*1024
+			f.setLength(4096);//4096*1024
 			long l = f.getFilePointer();
 			System.out.println("current offset"+l);
 		    bytes = f.length();
@@ -60,6 +60,7 @@ public class createFile {
 		try {
 			RandomAccessFile raf = new RandomAccessFile("./files/"+filename, "rw");
 			raf.seek(offset);
+			
 		//	int leftspace = 4096 -(int)raf.length();
 			if(!filechars.equals("NULL"))
 			{
@@ -68,14 +69,14 @@ public class createFile {
 			 pointer = (int)raf.getFilePointer();
 			//result=true;
 			}
-			
 			else
 			{
-				
 				raf.write(null);
 				pointer=offset;
 				
 			}
+			System.out.println("offset for append----: "+ offset +" chars "+filechars +" fileName"+ filename+" pointer "+pointer);
+			
 			
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
@@ -91,7 +92,9 @@ public class createFile {
 		RandomAccessFile f;
 		double bytes = 0;
 		try {
+			System.out.println("randomaccessfile-- ");
 			RandomAccessFile raf = new RandomAccessFile("./files/"+filename, "rw");
+			System.out.println("random file access, file :"+raf);
 			int remaining = 4096-(fileoffset+1);
 			if(remaining >lengthofappend)
 			{
@@ -125,7 +128,8 @@ public class createFile {
 	            datacopy.write(data.read());
 	            
 	        }
-	        long l2 = data.getFilePointer();
+	        long l2 = data.length();
+	        System.out.println("data length"+l2+" file pointer "+data.getFilePointer()+" "+filename);
 		     pointer =(int)l2;
 	        data.close();
 	        datacopy.close();

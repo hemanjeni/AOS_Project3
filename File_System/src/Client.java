@@ -245,7 +245,7 @@ public class Client {
 					String server = reader2.readLine();
 					//					pw5.write("READ" + "," + node_no + "," + fileName);
                      int serverno =Integer.parseInt(server);
-					Message m = new Message(client_no,MessageType.HEARTBEAT,"START");
+					Message m = new Message(client_no,MessageType.HEARTBEAT,"STOP");
 					oos[serverno].writeObject(m);
 					System.out.println(" command sent to server to stop");
 					logger.info(	"command sent to server to stop");
@@ -257,10 +257,10 @@ public class Client {
 					String server = reader2.readLine();
 					//					pw5.write("READ" + "," + node_no + "," + fileName);
                      int serverno =Integer.parseInt(server);
-					Message m = new Message(client_no,MessageType.HEARTBEAT,"STOP");
+					Message m = new Message(client_no,MessageType.HEARTBEAT,"START");
 					oos[serverno].writeObject(m);
-					System.out.println(" command sent to server to stop");
-					logger.info(	"command sent to server to stop");
+					System.out.println(" command sent to server to start");
+					logger.info(	"command sent to server to start");
 				}
 
 				if (message2.equals("6")) {
@@ -308,7 +308,7 @@ public class Client {
 				while(!message.equals("Over"))
 				{
 					//logger.info("inside while");
-					if (oistream.available() > 0)
+				
 					{
 						logger.info("data available");
 
@@ -328,6 +328,8 @@ public class Client {
 							String chunkname = object.getChunkname();
 							int chunkoffset = object.getChunkoffset();
 							// after retrieving the contents of the msg, send READFILE  to the corresponding server
+							System.out.println("sent read request to server from client --- "+filename+" server id : "+server+
+									" chunkoffset "+chunkoffset);
 
 							Message m = new Message (client_no,MessageType.READFILE,chunkname,chunkoffset);
 							oos[server].writeObject(m);
@@ -388,10 +390,13 @@ public class Client {
 
 							//boolean result =	 initiate2Phase.initiate(object,ois,oos,client_no);
 							//==================================================
+							
+							System.out.println("append received at client-- ");
 							String filename = object.getFileName();
 							int server1 = object.getServer1();
 							int server2 = object.getServer2();
 							int server3 = object.getServer3();
+							
 							String chunkname1 = object.getChunkname1();
 							String chunkname2 = object.getChunkname2();
 							String chunkname3 = object.getChunkname3();
@@ -406,7 +411,7 @@ public class Client {
 							//once coordinator receives all agreed messages, it sends commit message after cohorts receive commit message , they commit
 
 							
-								System.out.println("====TWO PHASE INITIATION===");
+								System.out.println("====TWO PHASE INITIATION==="+server1+" "+server2+" "+server3);
 								//this.senderID = senderUID;
 								//this.msgtype = Msgtype;
 								//this.fileName = chunkname;

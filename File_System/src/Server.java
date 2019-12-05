@@ -29,9 +29,10 @@ public class Server {
 	static HashMap<String, Boolean> hmap7 = new HashMap();//is full/or not
 	static StringBuilder commitchars;
 	static HashMap<String,Integer> hmapfileoffset = new HashMap();
-static boolean heartbeatflag=true;
 	Logger logger;
 	public static boolean exit = false;
+	boolean heartbeatflag1 = true;
+	boolean heartbeatflag2 = false;
 
 	public Server(String args[]) throws IOException {
 		ConfigProperties prop = new ConfigProperties();
@@ -140,6 +141,7 @@ static boolean heartbeatflag=true;
 				t.start();
 				
 
+				
 				
 
 				// connecting to other servers
@@ -441,15 +443,29 @@ static boolean heartbeatflag=true;
 		}
 
 		// versionum
-
+		
 		hashmapInitialization();
 		// generating heartbeat messages every 5 secs
-		while (!exit) {
-
+		
+		while (true) {
+			
+			if(!heartbeatflag1) {
+				try {
+					System.out.println("heartbeat flag value"+heartbeatflag1);
+					Thread.sleep(100000);
+					heartbeatflag1 = true;
+					System.out.println("heartbeatFlag1 value again changed to"+heartbeatflag1);
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+			
+			if(heartbeatflag1)
+			{
 			int iteration = 5;
 			try {
-				if(true)
-				{
+				
 					
 				Thread.sleep(iteration * 1000);
 				File[] files = getFiles();
@@ -475,24 +491,26 @@ static boolean heartbeatflag=true;
 					hb.setFull(hmap7.get(file4.getName()));
 					
 					// change 1
-					System.out.println(hb.getStringRepresentation());
+					//System.out.println(hb.getStringRepresentation());
 					hms[i] = hb;
 					// change 2
 					//System.out.println(server_no+","+hmap6.get(file4.getName())+","+file4.getName()+","+hmap3.get(file4.getName())+","+hmap4.get(file4.getName())+","+hmap5.get(file4.getName()));
 				}
 
+				
 				heartbeatMessage hbm = new heartbeatMessage(hms);
 				hbm.setMsgtype(MessageType.HEARTBEAT);
+				hbm.setSenderID(this.server_no);
 				oos[0].writeObject(hbm);
 				}
-			} catch (InterruptedException e) {
+			 catch (InterruptedException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 			//change 3
 			//System.out.println("i should appear every 5 secs");
 
-		}
+		}}
 
 	}
 	// threads handling each client
@@ -619,17 +637,22 @@ static boolean heartbeatflag=true;
 	public static String readFromRandomAccessFile(String file, int position) {
 
 		// removed num -> third parameter should check its functionality now!
-
+		
 		String record = null;
 		try {
-
+			
+			System.out.println("server got read resposed for +"+file);
+			// change 1997
 			RandomAccessFile fileStore = new RandomAccessFile("./files/"+file, "r"); // moves file pointer to
+			System.out.println("server got file +"+fileStore);
+			
 			fileStore.seek(position); // reading String from RandomAccessFile
 			byte[] b = new byte[4096];
 			int fileoffsetpoint =hmapfileoffset.get(file);
+			System.out.println("position "+ position +"fileoffsetpoint :"+fileoffsetpoint);
+			// change 1997
+			fileStore.read(b, position, 1000);//may be +1?
 			
-			fileStore.read(b, position, fileoffsetpoint);//may be +1?
-
 			String text = new String(b, "UTF-8");
 			char[] chars = text.toCharArray();
 			record = text;
@@ -640,6 +663,7 @@ static boolean heartbeatflag=true;
 		return record;
 	}
 
+	
 	/*public void buildFileHashmap() {
 		StringBuilder filenames = new StringBuilder();
 		filenames.append("LINUX FILE NAMES" + ":" + "INDICES" + "\n");
@@ -857,16 +881,18 @@ static boolean heartbeatflag=true;
 
 							   if(object.getFileName().equals("STOP"))
 							   {
-                                heartbeatflag=false;
+                                heartbeatflag1=false;
 								
-								System.out.println("heartbeat received at the server to stop");
+								System.out.println("heartbeat received at the server to stop"+heartbeatflag1);
+								
+								//System.out.println("heartbeat received at the server to stop"+heartbeatflag1);
 							   }
 							   
 							   if(object.getFileName().equals("START"))
 							   {
-                                heartbeatflag=true;
+                                heartbeatflag2=true;
 								
-								System.out.println("heartbeat received at the server to start");
+								System.out.println("heartbeat received at the server to start"+heartbeatflag2);
 							   }
 
 							}
@@ -880,7 +906,7 @@ static boolean heartbeatflag=true;
 							String filecharacters = object.getReadcharacters();
 
 							String filenameatmylocation = filename.split("_")[0] + "_" + filename.split("_")[1] + "_"
-									+ filename.split("_")[2] + "_" + server_no;
+									+ filename.split("_")[2] + "_" + server_no+".txt";
 							
 							// DELETE THE FILE AND THEN CALL GETFILES() METHOD done
 							File[] allfiles2 = getFiles();
@@ -905,7 +931,7 @@ static boolean heartbeatflag=true;
 								System.out.println("Downloaded file!");
 								logger.info("Downloaded file!");
 							} catch (Exception e) {
-								System.out.println("Error  while downloading file");
+								System.out.println("Error  while downloading file"+e);
 							}
 						}
 						// client sent a release message
@@ -956,13 +982,16 @@ static boolean heartbeatflag=true;
 								// ADD CODE TO RENAME THE FILE! and update hmaps
 								int version = Integer.parseInt(chunkname.split("_")[2])+1;
 								String newname = chunkname.split("_")[0] + "_" + chunkname.split("_")[1] + "_"
-										+ Integer.toString(version) + "_" + server_no;
+										+ Integer.toString(version) + "_" + server_no+".txt";
 								int createfilepointer=createFile.renameFile(chunkname,newname);
+								int finalOffSet = hmap3.get(chunkname)+stringtoappend.length();;
+								
+								
 								
 								hmap2.remove(chunkname);// index
 								hmap6.remove(chunkname);
 								hmap3.remove(chunkname);
-								hmapfileoffset.remove(chunkname)	;
+								hmapfileoffset.remove(chunkname);
 								hmap4.remove(chunkname);
 								hmap5.remove(chunkname);
 								hmap7.remove(chunkname);
@@ -972,9 +1001,9 @@ static boolean heartbeatflag=true;
 								hmap2.put(newname, totalfiles - 1);// index //impact on already existing file but hmap2 where used? looping!
 								
 								hmap6.put(newname, newname.split("_")[0]);// actual file name
-								
-								hmap3.put(newname,createfilepointer );// last offset
-								hmapfileoffset.put(newname,createfilepointer)	;	
+								System.out.println("createfilepointer +"+finalOffSet);
+								hmap3.put(newname,finalOffSet);// last offset
+								hmapfileoffset.put(newname,finalOffSet)	;	
 								hmap4.put(newname, Integer.parseInt(newname.split("_")[1]));// chunk index
 																										// index
 								
@@ -1018,7 +1047,11 @@ static boolean heartbeatflag=true;
 							int chunkoffset = object.getChunkoffset();
 							int requestor = object.getSenderID();
 							int sizeofappend = object.getSizeofappend();
-							boolean checkresult = createFile.checkfileAppend(chunkname, sizeofappend,hmapfileoffset.get(chunkname));
+							
+							System.out.println("file/chunk for comimt "+chunkname+" chunkoffset "+chunkoffset+" requestor "
+									+requestor+" sizeofappend");
+							//boolean checkresult = createFile.checkfileAppend(chunkname, sizeofappend,hmapfileoffset.get(chunkname));
+							boolean checkresult = true;
 							//boolean result = createFile.fileAppendString(chunkname, "NULL");
 
 							if (checkresult == false) {

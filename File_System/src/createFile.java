@@ -71,7 +71,7 @@ public class createFile {
 			}
 			else
 			{
-				raf.write(null);
+				raf.write(0);
 				pointer=offset;
 				
 			}

@@ -34,7 +34,7 @@ public class MetadataServer {
     private Map<String, Integer> replicaOffset;
     private Map<Integer, Boolean> serversConnected;
     private Map<Integer, Long> lastHeartbeat;
-    private Map<String, Boolean> replicaIsFull;
+    private Map<String, Boolean> chunkIsFull;
     private Map<String, Integer> fileNameMapping;
     static  Map<Integer,Socket> connections;
 
@@ -55,7 +55,7 @@ public class MetadataServer {
         chunkSize = Collections.synchronizedMap(new HashMap<>());
         fileNameMapping = Collections.synchronizedMap(new HashMap<>());
         connections = Collections.synchronizedMap(new HashMap<>());
-        replicaIsFull = Collections.synchronizedMap(new HashMap<>());
+        chunkIsFull = Collections.synchronizedMap(new HashMap<>());
         
         serversConnected.put(1,true);
         serversConnected.put(2,true);
@@ -116,7 +116,7 @@ public class MetadataServer {
                 if (lastHeartbeat.containsKey(serverID) && ((int) ((int) (System.currentTimeMillis() / 1000) - lastHeartbeat.get(serverID)) >=15))
                   {
                 	int cal = (int) ((int) (System.currentTimeMillis() / 1000) - lastHeartbeat.get(serverID)); // >= 15;
-                	serversConnected.put(2, false);
+                	serversConnected.put(serverID, false);
                 }
             }
             
@@ -149,7 +149,7 @@ public class MetadataServer {
                         String linuxFileName;
                         String fileName, chunkName1; //not required
                         int senderID, chunkIndex, versionNo;
-                        long offset;
+                        long offSet, oldOffSet;
 
                         heartbeat[] heartbeats = heartbeatmsg.getHeartBeats();
                         for(int i=0;i<heartbeats.length;i++){
@@ -172,15 +172,16 @@ public class MetadataServer {
                         	//abc_1
                         	chunkName1 = chunkSplit[0]+"_"+chunkSplit[1];
                             
-                            
                             //todo check how server is naming chunk index
                         	//1
                             chunkIndex = heartbeats[i].getChunkindex();
-                            offset = heartbeats[i].getOffset();
-                            //0
                             
-                                                      
-                            
+                            offSet = heartbeats[i].getLastoffset();
+                            chunkSize.putIfAbsent(chunkName1, offSet);
+                            oldOffSet = chunkSize.get(chunkName1);
+                            if(oldOffSet < offSet) {
+                            	chunkSize.put(chunkName1,offSet);
+                            }
                             // check the code here
                             
                             linuxfileToChunks.putIfAbsent(fileName, new ArrayList<String>());
@@ -196,6 +197,40 @@ public class MetadataServer {
                             
                             
                             for(String chunk:chunks) {
+                            	chunkIsFull.putIfAbsent(chunk, false);
+                            	
+                            	if(heartbeats[i].getFull()) {
+                            		System.out.println("chunkFull" +chunkName1);
+                            		//replicaIsFull create a new chunk for the file
+                            		
+                            		if(!chunkIsFull.get(chunk))
+                            		chunkIsFull.put(chunk, true);
+                            		List<Integer> serversSelected = randomServers();
+                            		for(int randomServers : serversSelected) {
+            						    /*it will call the function to send message to create chunk to the selected server where i
+            						    is ID of server
+                                        */
+                                        if(serversConnected.get(randomServers)) {
+                                        	//chunkName +"_"+ "0"+ "_" + i +"."+tempLinuxFileName[1];
+                                            String[] chunkNames = chunkName1.split("_");
+                                            int chunkID = Integer.parseInt(chunkNames[1]);
+                                            
+                                            String newChunkName = chunkNames[0]+"_"+(chunkID+1);
+                                            System.out.println("chunkID for new chunk"+chunkID);
+                                            String NewReplicaName = newChunkName+"_"+"0"+"_"+randomServers+".txt";
+                                            
+                                            System.out.println("replica name for new created file"+NewReplicaName);
+                                            sendMessageToServer(randomServers-1, MessageType.CREATE, newChunkName, fileName, NewReplicaName,  (long) 0);
+                                        }
+                                        else{
+                                            System.out.println("server is dead, ID:" + randomServers);
+                                        }
+
+                                    }
+                            		
+                            	}else {
+                            		chunkIsFull.put(chunk, false);
+                            	}
                             	
                             	
                             	chunkToReplicas.putIfAbsent(chunk, new ArrayList<String>());
@@ -269,19 +304,40 @@ public class MetadataServer {
                                     
                                     for(String replica : replicas) {
                                     	
-                                    	if(heartbeats[i].getFull()) {
-                                    		//replicaIsFull
+                                    	/*if(heartbeats[i].getFull()) {
+                                    		System.out.println("chunkFull" +chunkName1);
+                                    		//replicaIsFull create a new chunk for the file
+                                    		if(!chunkIsFull.get(chunk))
+                                    		chunkIsFull.put(chunk, true);
+                                    		List<Integer> serversSelected = randomServers();
+                                    		for(int randomServers : serversSelected) {
+                    						    //it will call the function to send message to create chunk to the selected server where i
+                    						    //is ID of server
+                                                
+                                                if(serversConnected.get(i)) {
+                                                	//chunkName +"_"+ "0"+ "_" + i +"."+tempLinuxFileName[1];
+                                                    String[] chunkNames = chunkName1.split("_");
+                                                    int chunkID = Integer.parseInt(chunkNames[1]);
+                                                    String newChunkName = chunkNames[0]+(chunkID++);
+                                                    String NewReplicaName = newChunkName+"_"+"0"+"i"+".txt";
+                                                    
+                                                    System.out.println("replica name for new created file"+NewReplicaName);
+                                                    sendMessageToServer(i-1, MessageType.CREATE, newChunkName, fileName, NewReplicaName,  (long) 0);
+                                                }
+                                                else{
+                                                    System.out.println("server is dead, ID:" + i);
+                                                }
+
+                                            }
+                                    		
+                                    	}else {
+                                    		chunkIsFull.put(chunk,false);
                                     	}
-                                    	
-                                    	
+                                    	*/
                                     	replicaVersion.putIfAbsent(replica, versionNo);
                                     	replicaToServer.putIfAbsent(replica, senderID);
-                                       	//System.out.println(" server mepped to the replica "+replicaToServer.get(replica));
+                                    	//System.out.println(" server mepped to the replica "+replicaToServer.get(replica));
                                        	
-                                       	
-                                       	
-                                       	
-                                       
                                     	if(senderID == replicaToServer.get(replica)){
                                              //when servers was dead and got connected again
                                          	serversConnected.putIfAbsent(senderID, true);
@@ -319,7 +375,6 @@ public class MetadataServer {
 	
                                 }
                             }
-                            
                             
                             //String chunkName = chunks.get(chunkIndex-1);
                             //chunkToReplicas.putIfAbsent(chunkName, new ArrayList<String>());
@@ -436,7 +491,7 @@ public class MetadataServer {
                         replicasToServers.forEach(i-> System.out.println("replicas to servers" + i));
                         //replicas.forEach(i-> System.out.println("replicas list:  "+i));
                         if(replicasToServers.size()<3) {
-                        	System.out.println("the 3rd server is dead!"+replicasToServers.get(0)+" "+replicasToServers.get(1));
+                        	System.out.println("one of the servers is dead!"+replicasToServers.get(0)+" "+replicasToServers.get(1));
                         	   message = new Message(0, MessageType.APPENDRESPONSE,
                               		replicasToServers.get(0),replicasToServers.get(1),0,
                                       replicas.get(0),replicas.get(1),null,linuxFileName);
@@ -471,13 +526,13 @@ public class MetadataServer {
 
                         for(String chunk : chunks){
                         	//change this code.
-                            //size = size+chunkSize.get(chunk);
+                            size = size+chunkSize.get(chunk);
                             System.out.println("chunk size updated : "+size);
                             if(offset< size){
                             	counter++;
                                 //return that file
-                                replicaToRead = chunkToReplicas.get(chunk).get(0);
-                                System.out.println("replica name for the read : "+replicaToRead);
+                            	replicaToRead = chunkToReplicas.get(chunk).get(0);
+                                System.out.println("replica name for the read ----1: "+replicaToRead);
                       
                                 serverID = replicaToServer.get(replicaToRead);
                                 if(!serversConnected.get(serverID)) {
@@ -496,7 +551,7 @@ public class MetadataServer {
                             }
                             if(counter == 0) {
                             	replicaToRead = chunkToReplicas.get(chunk).get(0);
-                            	System.out.println("replica name for the read ----server 1 dead : "+replicaToRead);
+                            	System.out.println("replica name for the read -----2: "+replicaToRead);
                                 
                                 serverID = replicaToServer.get(replicaToRead);
                                 if(!serversConnected.get(serverID)) {

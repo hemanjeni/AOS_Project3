@@ -32,7 +32,7 @@ public class Server {
 	Logger logger;
 	public static boolean exit = false;
 	boolean heartbeatflag1 = true;
-	boolean heartbeatflag2 = false;
+	
 
 	public Server(String args[]) throws IOException {
 		ConfigProperties prop = new ConfigProperties();
@@ -490,6 +490,7 @@ public class Server {
 					hmap7.putIfAbsent(file4.getName(), false);
 					hb.setFull(hmap7.get(file4.getName()));
 					
+					
 					// change 1
 					//System.out.println(hb.getStringRepresentation());
 					hms[i] = hb;
@@ -890,9 +891,9 @@ public class Server {
 							   
 							   if(object.getFileName().equals("START"))
 							   {
-                                heartbeatflag2=true;
+                                heartbeatflag1=true;
 								
-								System.out.println("heartbeat received at the server to start"+heartbeatflag2);
+								System.out.println("heartbeat received at the server to start"+heartbeatflag1);
 							   }
 
 							}
@@ -952,7 +953,7 @@ public class Server {
 							// this.readcharacters = filescharacters;
 
 							Message m = new Message(server_no, MessageType.READFILERESPONSE, fileName, filecharacters);
-							System.out.println("Sending file");
+							System.out.println("Sending file"+filecharacters);
 							logger.info("Sending file");
 							oos[hmap.get(requestor)].writeObject(m);
 							System.out.println("Sent file");
@@ -1050,8 +1051,8 @@ public class Server {
 							
 							System.out.println("file/chunk for comimt "+chunkname+" chunkoffset "+chunkoffset+" requestor "
 									+requestor+" sizeofappend");
-							//boolean checkresult = createFile.checkfileAppend(chunkname, sizeofappend,hmapfileoffset.get(chunkname));
-							boolean checkresult = true;
+							boolean checkresult = createFile.checkfileAppend(chunkname, sizeofappend,hmapfileoffset.get(chunkname));
+							//boolean checkresult = true;
 							//boolean result = createFile.fileAppendString(chunkname, "NULL");
 
 							if (checkresult == false) {

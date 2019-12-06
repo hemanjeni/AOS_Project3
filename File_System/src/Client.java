@@ -29,7 +29,7 @@ public class Client {
 		ConfigProperties prop = new ConfigProperties();
 		client_no = Integer.parseInt(args[0]);
 		String metadataServeraddress = prop.getPropValues("metadataServeraddress");
-
+/* reading from config file*/
 		String server1Address =  prop.getPropValues("Server1Address");
 		String server2Address =  prop.getPropValues("Server2Address");
 		String server3Address =  prop.getPropValues("Server3Address");
@@ -52,12 +52,12 @@ public class Client {
 		int server5portforclient2 = Integer.parseInt(prop.getPropValues("server5portforclient2"));
 
 		try {
-			//logger for server
+			//logger for client
 			File logDir = new File("./logs/");
 			if (!(logDir.exists()))
 				logDir.mkdir();
 			logger = Logger.getLogger(client_no + "client.log");
-
+/*produce logs*/
 			FileHandler fh = new FileHandler("logs/" + client_no + "-client.log");
 			fh.setFormatter(new SimpleFormatter());
 			// fh.setLevel(logLevel);
@@ -65,7 +65,7 @@ public class Client {
 			logger.info("Client" + client_no + "initialization");
 			// waiting for incoming socket connections from clients
 
-			//server no=1
+			//client no=1
 			if ((client_no) == 6) 
 			{
 				//connect to metadata server
@@ -184,11 +184,11 @@ public class Client {
 		BufferedReader reader2 = new BufferedReader(input);
 		System.out.println("Please enter operations  -1. CREATE 2. READ 3.APPEND 4.HBSERVER-STOP 5.HBSERVER-RESUME 6.EXIT");
 
-		try {
+		try {// continuously check for inputs
 			logger.info("Listening to console");
 
 			while (exit==false&&(message2 = reader2.readLine()) != null) {
-
+// create file
 				if (message2.equals("1")) {
 					logger.info(message2);
 					logger.info("create command to metadata server");
@@ -204,7 +204,7 @@ public class Client {
 				}
 
 
-
+//read file
 				if (message2.equals("2")) {
 
 					logger.info("read command to metadata server");
@@ -224,7 +224,7 @@ public class Client {
 
 				}
 
-
+//append toa file
 				if (message2.equals("3")) {
 					logger.info("append command to metadata server");
 					System.out.println("Give <filename> and press enter");
@@ -237,7 +237,7 @@ public class Client {
 					System.out.println("create command sent to MS");
 					logger.info(	"create command sent to MS");
 				}
-				
+			//stop sending heartbeat msgs	
 				if (message2.equals("4")) {
 					logger.info("give server_no");
 					System.out.println("give server_no");
@@ -262,7 +262,7 @@ public class Client {
 					System.out.println(" command sent to server to start");
 					logger.info(	"command sent to server to start");
 				}
-
+//exit from the program
 				if (message2.equals("6")) {
 					exit = true;
 					logger.info("bye to everyone!");
@@ -311,7 +311,7 @@ public class Client {
 				
 					{
 						logger.info("data available");
-
+// metaserver to client for read request
 						Message object = (Message) oistream.readObject();
 						String messagetype =  object.getMsgtype().toString();
 						if(messagetype.equals("READRESPONSE"))
@@ -337,18 +337,19 @@ public class Client {
 							System.out.println("sent read request to server "+server);
 
 
-						}
+						}// server to client after read file request
 						if(messagetype.equals("READFILERESPONSE"))
 						{
 
                               // name weird but its ok!
 							String READRESPONSE = object.getReadcharacters();
-							
+							// print the output
 							logger.info("reading contents of server "+READRESPONSE);
 							System.out.println("reading contents of server "+READRESPONSE);
 
 
 						}
+						// in 2 phase commit server sent agreed
 						if(messagetype.equals("AGREED"))
 						{
 
@@ -361,6 +362,7 @@ public class Client {
 
 
 						}
+						//server sent abort
 						if(messagetype.equals("ABORT"))
 						{
 
@@ -373,7 +375,7 @@ public class Client {
 
 
 						}
-						
+						// server sent appendresponse
 						if(messagetype.equals("APPENDRESPONSE"))
 						{
 							//this.senderID = senderUID;
@@ -432,7 +434,7 @@ public class Client {
 								result = buffer.toString();
 								int lengthofresult = result.length();
 								// create message objects and write to streams
-							try {
+							try { // send commit requests to servers
 								Message m1 = new Message(client_no,MessageType.COMMITREQUEST,chunkname1,chunkoffset,lengthofresult);
 								hmap_2phase.put(server1,0);
 								
@@ -492,7 +494,7 @@ public class Client {
 									      
 									            }
 									    hmap_2phase.clear();
-									    
+									    // if all servers sent agreed
 										if(abortflag==0)
 										{
 											try {
@@ -538,7 +540,7 @@ public class Client {
 							
 
 
-						}
+						}// metadata server to client giving details of servers
 						if(messagetype.equals("CREATERESPONSE"))
 						{
 							//this.senderID = senderUID;
@@ -578,7 +580,7 @@ public class Client {
 		}
 	}
 
-	/* server number to be given as argument while running */
+	/* client number to be given as argument while running */
 	public static void main(String[] args) throws IOException {
 		new Client(args);
 

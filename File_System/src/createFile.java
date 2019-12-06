@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 
 public class createFile {
-
+// code for file creation in ./files/ folder
 	public static void filecreate(String filename) throws IOException
 	{
 		RandomAccessFile f;
@@ -27,6 +27,7 @@ public class createFile {
 		System.out.println("file "+filename+"created with file size:"+megabytes);
 		
 	}
+	//used to download string to a new file after creating new replica
 	public static int filewithString(String filename,String filechars) throws IOException
 	{
 		RandomAccessFile f;
@@ -85,7 +86,7 @@ public class createFile {
 		return pointer;	
 		
 	}
-	
+	//during 2 phase commit to check whether the length of a write fits into a 4kb file
 	public static boolean checkfileAppend(String filename,int lengthofappend, int fileoffset) throws IOException
 	{
 		boolean result=false; 
@@ -114,6 +115,7 @@ public class createFile {
 		return result;	
 		
 	}
+	//renaming a file
 	public static int renameFile(String filename,String newfile) throws IOException
 	{
 		

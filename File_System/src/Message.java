@@ -1,7 +1,7 @@
 import java.io.Serializable;
 
 public class Message  implements Serializable{
-
+// describes the messages exchanged between various processes
 	private static final long serialVersionUID = 1L;
 	private int senderID;
 	private int offset;
@@ -67,7 +67,7 @@ public class Message  implements Serializable{
 		return readcharacters;
 	}
 	
-
+// characters sent during read operation
 	public void setReadcharacters(String readcharacters) {
 		this.readcharacters = readcharacters;
 	}

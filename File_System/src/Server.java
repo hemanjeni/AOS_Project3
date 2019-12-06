@@ -444,11 +444,11 @@ public class Server {
 
 		// versionum
 		
-		hashmapInitialization();
+		hashmapInitialization();// used for initialization of hashmaps from the existing files info
 		// generating heartbeat messages every 5 secs
 		
 		while (true) {
-			
+			// stop sending heartbeat msg to srver
 			if(!heartbeatflag1) {
 				try {
 					System.out.println("heartbeat flag value"+heartbeatflag1);
@@ -489,7 +489,7 @@ public class Server {
 					// change 1997
 					hmap7.putIfAbsent(file4.getName(), false);
 					hb.setFull(hmap7.get(file4.getName()));
-					
+					//constructing heartbeat msgs
 					
 					// change 1
 					//System.out.println(hb.getStringRepresentation());
@@ -604,7 +604,7 @@ public class Server {
 
 	}
 
-	
+	// get all the files in the ./files/ directory
 	public static File[] getFiles() {
 		File dir = new File("./files/");
 
@@ -634,7 +634,7 @@ public class Server {
 			e.printStackTrace();
 		}
 	}
-
+//read from random access file
 	public static String readFromRandomAccessFile(String file, int position) {
 
 		// removed num -> third parameter should check its functionality now!
@@ -651,8 +651,8 @@ public class Server {
 			byte[] b = new byte[4096];
 			int fileoffsetpoint =hmapfileoffset.get(file);
 			System.out.println("position "+ position +"fileoffsetpoint :"+fileoffsetpoint);
-			// change 1997
-			fileStore.read(b, position, 1000);//may be +1?
+			// send the entire file in a string
+			fileStore.read(b, position, 4096-position);//may be +1?
 			
 			String text = new String(b, "UTF-8");
 			char[] chars = text.toCharArray();
@@ -745,7 +745,7 @@ public class Server {
 	public static void main(String[] args) throws IOException {
 		new Server(args);
 	}
-
+//threads handling the server
 	class ChannelHandler implements Runnable {
 		ObjectInputStream objinput;
 		ObjectOutputStream objoutput;
@@ -833,7 +833,7 @@ public class Server {
 							}
 
 						}
-
+// after the server comes up from dead,this msg sent from metaserver to server
 						if (messagetype.equals("UPDATEREPLICA")) {
 
 						//	this.senderID = senderUID;
@@ -878,6 +878,7 @@ public class Server {
 							System.out.println("read request sent to the server " + server);
 
 						}
+					//client sending signal for stopping heartbeat 
 						if (messagetype.equals("HEARTBEAT")) {
 
 							   if(object.getFileName().equals("STOP"))
@@ -935,7 +936,7 @@ public class Server {
 								System.out.println("Error  while downloading file"+e);
 							}
 						}
-						// client sent a release message
+						// server sends another server to download a given file
 						if (messagetype.equals("READFILE")) {
 							//this.senderID = senderUID;
 							//this.msgtype = Msgtype;
@@ -960,7 +961,7 @@ public class Server {
 							logger.info("Sent file");
 
 						}
-
+//commit from client
 						if (messagetype.equals("COMMIT")) {
 							//this.senderID = senderUID;
 							//this.msgtype = Msgtype;
@@ -1036,7 +1037,7 @@ public class Server {
 						 * 
 						 * }
 						 */
-
+// client sends cmmit request for 2 phase commit
 						if (messagetype.equals("COMMITREQUEST")) {
 							
 							//this.senderID = senderUID;

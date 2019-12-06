@@ -3,7 +3,7 @@ import java.io.Serializable;
 public class heartbeat implements Serializable{
 
 	
-	//name of linux file ,version_num, offset, chunk index, filename
+	//name of linux file ,version_num, offset, chunk index, filename setting in heartbeat
 	
 	    private int senderID;
 	    private int chunkindex;
